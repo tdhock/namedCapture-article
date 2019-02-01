@@ -1,0 +1,135 @@
+% !TeX root = RJwrapper.tex
+\title{A new syntax for extracting tables of numbers from non-tabular text data using regular expressions}
+\author{by Toby Dylan Hocking}
+
+\maketitle
+
+\abstract{Regular expressions are powerful tools for manipulating
+  non-tabular textual data. For many tasks (visualization, machine
+  learning, etc), tables of numbers must be extracted from such data
+  before processing by other R functions. We present the R package
+  namedCapture, which facilitates such tasks by providing a new
+  user-friendly syntax for defining regular expressions in R code. We
+  describe the history of regular expression support in R, and provide
+  detailed comparisons with related R packages (rex, stringr, stringi,
+  tidyr, rematch2, re2r).}
+
+\section{Introduction}
+
+Regular sets and regular expressions were introduced on paper by
+Stephen Cole Kleene in 1956 (including the "Kleene star" * for zero
+or more). Among the first uses of a regular expression in a program
+was Ken Thompson (Bachelors 1965, Masters 1966, UC Berkeley) for his
+version of the QED (1968) and ed (1969) text editors, developed at
+Bell Labs for Unix. In ed, =g/re/p= means "Global Regular Expression
+Print," which gave the name to the grep program, also written by
+Thompson (1974). I'm not sure about the origin of capture groups, but
+Friedl claimed that "The regular expressions supported by grep and
+other early tools were quite limited...grep's capturing metacharacters
+were =\(...\)=, with unescaped parentheses representing literal
+text." Larry Wall wrote Perl version 1 in 1987 while working at Unisys
+Corporation, and it had capturing regular expressions. Perl version 5
+in 1994 introduced many extensions using the =(?= notation. Sources:
+[[https://en.wikipedia.org/w/index.php?title%3DRegular_expression&oldid%3D682153405][wikipedia:Regular_expression]] and "A Casual Stroll Across the Regex
+Landscape," in Ch.3 of Friedl's book Mastering Regular Expressions.
+
+Philip Hazel started writing the Perl-Compatible Regular Expressions
+(PCRE) library for the exim mail program in 1997. Python used PCRE
+starting with version 1.5 in 1997. Source: [[file:python-1.5.2-Misc-HISTORY.txt][Python-1.5/Misc/HISTORY]].
+
+#+BEGIN_SRC text
+From 1.5a3 to 1.5a4...
+- A completely new re.py module is provided (thanks to Andrew
+Kuchling, Tim Peters and Jeffrey Ollie) which uses Philip Hazel's
+"pcre" re compiler and engine.
+#+END_SRC
+
+Python 1.5 introduced named capture groups and the =(?P<name>subpattern)=
+syntax. Source: [[file:python-1.5-Doc-libre.tex][Python-1.5/Doc/libre.tex]].
+
+#+BEGIN_SRC tex
+\item[\code{(?P<\var{name}>...)}] Similar to regular parentheses, but
+the text matched by the group is accessible via the symbolic group
+name \var{name}.
+#+END_SRC
+
+PCRE support for named capture was introduced in 2003. Source: [[http://pcre.org/original/changelog.txt][PCRE
+changelog]] ([[file:pcre1-changelog.txt][my copy]]).
+
+#+BEGIN_SRC text
+Version 4.0 17-Feb-03...
+36. Added support for named subpatterns. The Python syntax (?P<name>...) is
+used to name a group. Names consist of alphanumerics and underscores, and must
+be unique. Back references use the syntax (?P=name) and recursive calls use
+(?P>name) which is a PCRE extension to the Python extension. Groups still have
+numbers.
+#+END_SRC
+
+R includes PCRE starting with version 1.6.0 in 2002. Source:
+[[file:R.NEWS.1.txt][R-src/NEWS.1]].
+
+#+BEGIN_SRC text
+CHANGES IN R VERSION 1.6.0...
+    o	grep(), (g)sub() and regexpr() have a new argument `perl'
+	which if TRUE uses Perl-style regexps from PCRE (if installed).
+#+END_SRC
+
+I wrote the code in https://svn.r-project.org/R/trunk/src/main/grep.c
+which implements named capture regular expression support for R. It
+was merged into base R in 2011
+https://bugs.r-project.org/bugzilla3/show_bug.cgi?id=14518, and has
+been included with every copy of R since version 2.14.
+
+I wrote the =str.extractall= method in [[http://pandas.pydata.org/][pandas]], first included with
+release version 0.18.0 ([[https://github.com/pydata/pandas/pull/11386][my Pull Request]] was merged in Feb 2016).
+
+
+Introductory section which may include references in parentheses
+\citep{R}, or cite a reference such as \citet{R} in the text.
+
+\section{Another section}
+
+This section may contain a figure such as Figure~\ref{figure:rlogo}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics{Rlogo-5}
+  \caption{The logo of R.}
+  \label{figure:rlogo}
+\end{figure}
+
+\section{Another section}
+
+There will likely be several sections, perhaps including code snippets, such as:
+
+\begin{example}
+  x <- 1:10
+  result <- myFunction(x)
+\end{example}
+
+\section{Summary}
+
+This file is only a basic article template. For full details of \emph{The R Journal} style and information on how to prepare your article for submission, see the \href{https://journal.r-project.org/share/author-guide.pdf}{Instructions for Authors}.
+
+\bibliography{RJreferences}
+
+\address{Author One\\
+  Affiliation\\
+  Address\\
+  Country\\
+  (ORCiD if desired)\\
+  \email{author1@work}}
+
+\address{Author Two\\
+  Affiliation\\
+  Address\\
+  Country\\
+  (ORCiD if desired)\\
+  \email{author2@work}}
+
+\address{Author Three\\
+  Affiliation\\
+  Address\\
+  Country\\
+  (ORCiD if desired)\\
+  \email{author3@work}}
