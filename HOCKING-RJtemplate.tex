@@ -1,5 +1,7 @@
 % !TeX root = RJwrapper.tex
-\title{A new syntax for extracting tables of numbers from non-tabular text data using regular expressions}
+\title{An efficient and readable syntax for defining named capture
+  regular expressions in R code}
+
 \author{by Toby Dylan Hocking}
 
 \maketitle
@@ -10,82 +12,73 @@
   before processing by other R functions. We present the R package
   namedCapture, which facilitates such tasks by providing a new
   user-friendly syntax for defining regular expressions in R code. We
-  describe the history of regular expression support in R, and provide
-  detailed comparisons with related R packages (rex, stringr, stringi,
-  tidyr, rematch2, re2r).}
-
+  begin by describing the history of regular expressions and their
+  usage in R. We then describe the new features of the namedCapture
+  package, and provide detailed comparisons with related R packages
+  (rex, stringr, stringi, tidyr, rematch2, re2r).}
 \section{Introduction}
 
-Regular sets and regular expressions were introduced on paper by
-Stephen Cole Kleene in 1956 (including the "Kleene star" * for zero
-or more). Among the first uses of a regular expression in a program
-was Ken Thompson (Bachelors 1965, Masters 1966, UC Berkeley) for his
-version of the QED (1968) and ed (1969) text editors, developed at
-Bell Labs for Unix. In ed, =g/re/p= means "Global Regular Expression
-Print," which gave the name to the grep program, also written by
-Thompson (1974). I'm not sure about the origin of capture groups, but
-Friedl claimed that "The regular expressions supported by grep and
-other early tools were quite limited...grep's capturing metacharacters
-were =\(...\)=, with unescaped parentheses representing literal
-text." Larry Wall wrote Perl version 1 in 1987 while working at Unisys
-Corporation, and it had capturing regular expressions. Perl version 5
-in 1994 introduced many extensions using the =(?= notation. Sources:
-[[https://en.wikipedia.org/w/index.php?title%3DRegular_expression&oldid%3D682153405][wikipedia:Regular_expression]] and "A Casual Stroll Across the Regex
-Landscape," in Ch.3 of Friedl's book Mastering Regular Expressions.
+Today regular expression libraries are powerful and widespread tools
+for text processing. We begin by providing a brief history of regular
+expressions and their usage in \R. We then provide an overview of
+current R packages for regular expressions.
 
-Philip Hazel started writing the Perl-Compatible Regular Expressions
-(PCRE) library for the exim mail program in 1997. Python used PCRE
-starting with version 1.5 in 1997. Source: [[file:python-1.5.2-Misc-HISTORY.txt][Python-1.5/Misc/HISTORY]].
+\subsection{Origin of regular expressions and named capture groups}
 
-#+BEGIN_SRC text
-From 1.5a3 to 1.5a4...
-- A completely new re.py module is provided (thanks to Andrew
-Kuchling, Tim Peters and Jeffrey Ollie) which uses Philip Hazel's
-"pcre" re compiler and engine.
-#+END_SRC
+Regular expressions were first proposed on paper
+by \citet{Kleene56}. Among the first uses of a regular expression in
+computers was for searching in a text editor \citep{Thompson68} and
+lexical processing of source code \citep{Johnson68}. 
 
-Python 1.5 introduced named capture groups and the =(?P<name>subpattern)=
-syntax. Source: [[file:python-1.5-Doc-libre.tex][Python-1.5/Doc/libre.tex]].
+A capture group in a regular expression is used to extract text that
+matches a sub-pattern. In 1974, Thompson wrote the \texttt{grep}
+command line program, which was among the first to support capture
+groups \citep{Friedl2002}. In that program, backslash-escaped
+parentheses \verb|\(\)| were used to open and close each capture
+group, which could then be referenced by number (\verb|\1| for the
+first capture group, etc).
 
-#+BEGIN_SRC tex
-\item[\code{(?P<\var{name}>...)}] Similar to regular parentheses, but
-the text matched by the group is accessible via the symbolic group
-name \var{name}.
-#+END_SRC
+The idea for named capture groups seems to have originated in 1994
+with the contributions of Tracy Tims to Python 1.0.0, which used the
+\verb|\(<labelname>...\)| syntax
+\citep{Python-1.5.2-Misc-HISTORY}. Python 1.5 introduced the
+\verb|(?P<labelname>...)| syntax for name capture groups
+\citep{python-1.5-Doc-libre.tex}; the P was used to indicate that the
+syntax was a Python extension to the standard.
 
-PCRE support for named capture was introduced in 2003. Source: [[http://pcre.org/original/changelog.txt][PCRE
-changelog]] ([[file:pcre1-changelog.txt][my copy]]).
+Perl-Compatible Regular Expressions (PCRE) is a C library that is now
+a widely used in free/open-source software tools such as Python and R.
+PCRE introduced support for named capture in 2003, based on the Python
+syntax \citep{pcre1-changelog.txt}. Starting in 2006, it supported the
+\verb|(?<labelname>...)| and \verb|(?'labelname'...)| syntax, to be
+consistent with Perl and .NET \citep{pcre1-changelog.txt}.
 
-#+BEGIN_SRC text
-Version 4.0 17-Feb-03...
-36. Added support for named subpatterns. The Python syntax (?P<name>...) is
-used to name a group. Names consist of alphanumerics and underscores, and must
-be unique. Back references use the syntax (?P=name) and recursive calls use
-(?P>name) which is a PCRE extension to the Python extension. Groups still have
-numbers.
-#+END_SRC
+PCRE was first included in R version 1.6.0 in 2002
+\citep{R.NEWS.1.txt}. The R functions \verb|regexpr| and
+\verb|gregexpr| could be given the \verb|perl=TRUE| argument in order
+to use the PCRE library. I wrote the C code that uses PCRE to extract
+text matched by named capture groups \citep{HockingBug2011}, which was
+accepted into R starting with version 2.14. I presented a lightning
+talk at useR 2011 that showcased the new functionality
+\citep{HockingUseR2011}.
 
-R includes PCRE starting with version 1.6.0 in 2002. Source:
-[[file:R.NEWS.1.txt][R-src/NEWS.1]].
+\subsection{R packages for regular expressions}
 
-#+BEGIN_SRC text
-CHANGES IN R VERSION 1.6.0...
-    o	grep(), (g)sub() and regexpr() have a new argument `perl'
-	which if TRUE uses Perl-style regexps from PCRE (if installed).
-#+END_SRC
+Since the 
 
-I wrote the code in https://svn.r-project.org/R/trunk/src/main/grep.c
-which implements named capture regular expression support for R. It
-was merged into base R in 2011
-https://bugs.r-project.org/bugzilla3/show_bug.cgi?id=14518, and has
-been included with every copy of R since version 2.14.
+\citep{rex}.
 
-I wrote the =str.extractall= method in [[http://pandas.pydata.org/][pandas]], first included with
-release version 0.18.0 ([[https://github.com/pydata/pandas/pull/11386][my Pull Request]] was merged in Feb 2016).
+\citep{stringr}
 
+\citep{stringi}
 
-Introductory section which may include references in parentheses
-\citep{R}, or cite a reference such as \citet{R} in the text.
+\citep{tidyr}
+
+\citep{rematch2}
+
+\citep{re2r}
+
+\citep{namedCapture}
 
 \section{Another section}
 
@@ -93,7 +86,7 @@ This section may contain a figure such as Figure~\ref{figure:rlogo}.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics{Rlogo-5}
+  %\includegraphics{Rlogo-5}
   \caption{The logo of R.}
   \label{figure:rlogo}
 \end{figure}
