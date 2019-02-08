@@ -19,7 +19,31 @@
 \section{Introduction}
 
 Today regular expression libraries are powerful and widespread tools
-for text processing. We begin by providing a brief history of regular
+for text processing. A regular expression \textbf{pattern} is
+typically a character string that defines a set of possible
+\textbf{matches} in some other \textbf{subject} strings. For example
+the pattern \verb|o+| matches one or more lower-case o characters; it
+would match the last two characters in the subject \verb|foo|, and it
+would not match in the subject \verb|bar|. 
+
+The focus of this article is regular expressions with capture groups,
+which are used to extract subject substrings. Capture groups are
+typically defined using parentheses. For example, the pattern
+\verb|[0-9]+| matches one or more digits (e.g. \verb|314| but not
+\verb|3.14|), and the pattern \verb|[0-9]+-[0-9]+| matches a range of
+digits (e.g. \verb|9-5|). The pattern \verb|([0-9]+)-([0-9]+)| will
+perform matching identically, but provides access by number/index to
+the strings matched by the capturing sub-patterns enclosed in
+parentheses (group 1 matches \verb|9|, group 2 matches \verb|5|). The
+pattern \verb|(?<start>[0-9]+)-(?<end>[0-9]+)| further provides access
+by name to the captured sub-strings (\verb|start| group matches
+\verb|9|, \verb|end| group matches \verb|5|). In R named capture
+groups are useful in order to create more readable regular expressions
+(names document the purpose of each sub-pattern), and to create more
+readable R code (named references to captured groups are better than
+numbered references).
+
+We begin by providing a brief history of regular
 expressions and their usage in \R. We then provide an overview of
 current R packages for regular expressions.
 
@@ -53,33 +77,140 @@ syntax \citep{pcre1-changelog.txt}. Starting in 2006, it supported the
 \verb|(?<labelname>...)| and \verb|(?'labelname'...)| syntax, to be
 consistent with Perl and .NET \citep{pcre1-changelog.txt}.
 
-PCRE was first included in R version 1.6.0 in 2002
-\citep{R.NEWS.1.txt}. The R functions \verb|regexpr| and
-\verb|gregexpr| could be given the \verb|perl=TRUE| argument in order
-to use the PCRE library. I wrote the C code that uses PCRE to extract
-text matched by named capture groups \citep{HockingBug2011}, which was
-accepted into R starting with version 2.14. I presented a lightning
-talk at useR 2011 that showcased the new functionality
-\citep{HockingUseR2011}.
+The first regular expression support in R was provided by the TRE C
+library \citep{TRE}. Although TRE supports capture groups, it does not
+allow capture groups to be named. PCRE was first included in R version
+1.6.0 in 2002 \citep{R.NEWS.1.txt}. The base R functions
+\verb|regexpr| and \verb|gregexpr| can be given the \verb|perl=TRUE|
+argument in order to use the PCRE library, or \verb|perl=FALSE| to use
+the TRE C library. A major difference between the two libraries is
+that TRE provides fast polynomial time match algorithms, whereas PCRE
+is exponential time in the worst case. Although for most patterns the
+time difference is negligible, malicious patterns can make PCRE run
+quite a bit slower (Section~\ref{sec:timings}).
 
-\subsection{R packages for regular expressions}
+The original versions of \verb|regexpr| and \verb|gregexpr| only
+returned the position/length of the text matched by an entire regex,
+not the capture groups (even though this is suppored in TRE/PCRE). I
+wrote the C code that uses PCRE to extract the text matched by each
+named capture group \citep{HockingBug2011}, which was accepted into R
+starting with version 2.14. I presented a lightning talk at useR 2011
+that showcased the new functionality \citep{HockingUseR2011}.
 
-Since the 
+\subsection{Related R packages for capturing regular expressions}
 
-\citep{rex}.
+Since the introduction of named capture support in base R version
+2.14, several packages have been developed which use this
+functionality, and other packages have been developed which use other
+C libraries (Table~\ref{tab:Clib}). Each package supports different
+options for subject/pattern input, extracted text outputs, named
+capture groups, and type conversion (Table~\ref{tab:features}).
 
-\citep{stringr}
+The utils package now includes the strcapture function, which uses the
+base regexec function (also introduced in R-2.14) to extract the first
+match as a data.frame with one row per subject, and one column per
+capture group. It allows capture group names/types to be specified in
+a prototype data.frame argument, but does not allow capture group
+names in the regex pattern itself. PCRE is used with \verb|perl=TRUE|
+and TRE is used with \verb|perl=FALSE|.
+ 
+The rematch2 package provides the \verb|re_match| function which
+extracts the first match using the base \verb|regexpr| function
+\citep{rematch2}. It also provides the \verb|re_match_all| function
+which extracts all matches using the base \verb|gregexpr| function. In
+both cases the output is a tibble (a data.frame subclass) with one row
+for each subject (for all matches a list column is used). PCRE is used
+with \verb|perl=TRUE| and TRE is used with \verb|perl=FALSE|. Although
+TRE supports capture groups (and can be used via the base R regexec
+function), capture groups are not supported in rematch2 with
+\verb|perl=FALSE| (because it uses the base regexpr/gregexpr functions
+which do not return group info for TRE). Named capture groups are
+supported in rematch2 with \verb|perl=TRUE|.
 
-\citep{stringi}
+The stringi package provides the \verb|stri_match| and
+\verb|stri_match_all| functions, which use the ICU C library
+\citep{stringi}. The stringr package provides the \verb|str_match| and
+\verb|str_match_all| functions, which simply call the analogous
+functions from stringi. Capture groups are supported but named groups
+are not, so groups must be extracted by number. The \verb|stri_match|
+function returns a character matrix with one row for each subject and
+one column for each capture group. The \verb|stri_match_all| function
+returns a list with one element for each subject; each element is a
+data frame with one row for each match, and one column for each
+capture group.
 
-\citep{tidyr}
+The re2r package provides the \verb|re2_match| and
+\verb|re2_match_all| functions, which use the RE2 C++ library
+\citep{re2r}. The outputs of these functions are consistent with the
+stringi/stringr package. The input regex pattern may be specified as
+a character string or as a pre-compiled regex object (which
+results in faster matching if the regex is used with several calls to
+matching functions). Like TRE, the RE2 library guarantees polynomial
+time complexity, which is useful to avoid denial-of-service attacks
+from malicious patterns (see Section~\ref{sec:timings}).
 
-\citep{rematch2}
+The rex package provides the \verb|re_matches| function which supports
+named capture groups, and always uses PCRE \citep{rex}. By default it
+returns the first match (using the base \verb|regexpr| function), as a
+data.frame with one row for each subject, and one column for each
+capture group. If the \verb|global=TRUE| argument is given,
+\verb|gregexpr| is used to return all matches as a list of
+data.frames. A unique feature of the rex package is a set of functions
+for defining a regular expression in R code, which is then converted
+to a standard PCRE regex pattern string (for a detailed comparison
+with the proposed syntax of the namedCapture package, see
+Section~\ref{sec:rex-comparison}).
 
-\citep{re2r}
+The tidyr package provides the \verb|extract| function which uses the
+ICU library, so does not support regex patterns with named capture
+groups \citep{tidyr}. The subject is specified via the first two
+arguments: (1) a data.frame, and (2) a column name. The pattern is
+specified via the second two arguments: (3) a character vector for the
+capture group names, and (4) the regex pattern string (it is an error
+if the number of capture group names does not match the number of
+capture groups in the regex pattern). The pattern is used to find the
+first match in each subject. The return value is a data.frame with the
+same number of rows as the input, but without the subject column, and
+with an additional column for each capture group.
 
-\citep{namedCapture}
+\begin{table}
+  \centering
+\begin{tabular}{llll}
+Package      & First match              & All matches             & C library  \\
+\hline
+ base         & regexpr                  & gregexpr                & PCRE/TRE \\
+ utils        & strcapture               & NA                      & PCRE/TRE \\
+ rematch2     & re\_match                 & re\_match\_all            & PCRE/TRE\\
+ namedCapture & str\_match\_*, df\_match\_variable          & str\_match\_all\_*     & PCRE\\
+ rex          & re\_matches(global=FALSE) & re\_matches(global=TRUE) & PCRE\\
+ stringr      & str\_match                & str\_match\_all           & ICU\\
+ stringi      & stri\_match               & stri\_match\_all          & ICU\\
+ tidyr        & extract                  & NA                      & ICU\\
+ re2r         & re2\_match                & re2\_match\_all           & RE2
+\end{tabular}
+  \caption{R packages that provide functions for extracting first/all regex matches, and C library used.}
+  \label{tab:Clib}
+\end{table}
 
+
+\begin{table}
+  \centering
+\begin{tabular}{llllll}
+Package & subject & pattern      & outputs     & named & types \\
+\hline
+base & chr     & chr          & mat/list    & yes   & no    \\
+utils::strcapture & chr     & chr          & df          & no    & some  \\
+rematch2 & chr     & chr          & tibble      & yes   & no    \\
+namedCapture & chr/df/dt   & verbose      & mat/list/df/dt       & yes   & any   \\
+rex & chr     & verbose      & df/list          & yes   & no    \\
+stringr & chr     & chr          & mat/list    & no    & no    \\
+stringi & chr     & chr          & mat/list    & no    & no    \\
+tidyr::extract & df/dt   & chr          & df/dt       & no    & some  \\
+re2r & chr     & chr/compiled & df/list     & yes   & no    
+\end{tabular}
+  \caption{R packages provide different options for subject/pattern input, extracted text outputs, named capture groups, and type conversion.}
+  \label{tab:features}
+\end{table}
 \section{Another section}
 
 This section may contain a figure such as Figure~\ref{figure:rlogo}.
