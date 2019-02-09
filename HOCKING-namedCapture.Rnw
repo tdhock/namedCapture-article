@@ -1,5 +1,24 @@
-% !TeX root = RJwrapper.tex
-\title{An efficient and readable syntax for defining named capture
+\documentclass[a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{RJournal}
+\usepackage{amsmath,amssymb,array}
+\usepackage{booktabs}
+
+%% load any required packages here
+
+\begin{document}
+
+%% do not edit, for illustration only
+\sectionhead{Contributed research article}
+\volume{XX}
+\volnumber{YY}
+\year{20ZZ}
+\month{AAAA}
+
+\begin{article}
+
+  \title{An efficient and readable syntax for defining named capture
   regular expressions in R code}
 
 \author{by Toby Dylan Hocking}
@@ -220,27 +239,71 @@ expressions. It uses the PCRE library via the base \verb|regexpr| and
 \verb|gregexpr| functions.
 The main design features of the namedCapture package are
 inspired by the base R system, which provides such good support for
-naming objects, and referring to objects by name. In particular, the namedCapture package supports
+naming objects, and referring to objects by name. In particular, the namedCapture package supports 
 \begin{itemize}
 \item Specifying capture groups with names in a regular expression
   string, and stopping with an informative error if there are un-named
   capture groups.
+\item Output with rownames or list names taken from the 'name' capture group.
 \item A syntax for specifying capture group names via named arguments
   in R code.
-\item Recognizing
+\item Specifying a function for each named capture group,
+  which converts captured text from character to other arbitrary types.
 \end{itemize}
 
+\subsection{Three argument syntax}
+
+The most basic functions of the namedCapture package
+are \verb|str_match_named| and \verb|str_match_all_named|, which accept exactly three arguments:
+\begin{itemize}
+\item subject: a character vector from which we want to extract
+  tabular data.
+\item pattern: the (character scalar) regular expression with named
+  capture groups used for extraction.
+\item fun.list: a list with names that correspond to capture groups,
+  and values are functions used to convert the extracted character
+  data to other (typically numeric) types.
+\end{itemize}
+
+For an example, we consider subjects containing genomic positions:
+
+<<saveData>>=
+
+subject.vec <- c(
+  "chr10:213,054,000-213,055,000",
+  "chrM:111,000",
+  "this will not match",
+  NA, # neither will this.
+  "chr1:110-111 chr2:220-222") # two possible matches.
+
+@ 
+
+
+If no type conversion functions are specified,
+the \verb|str_match_named| function returns a character matrix with
+one row for each subject and one column for each capture group. Column
+names are taken from the group names that were specified in the
+regular expression pattern. 
+
+If
+type conversion functions are specified via the third argument, a
+data.frame is returned in order to support groups/columns of different
+types. For example
+
 \begin{table}
-  \centering
-  \begin{tabular}{llll}
-    First match & All matches & Arguments \\
-    \hline
-    \verb|str_match_named| & \verb|str_match_all_named| & chr subject, chr pattern, functions \\
-    \verb|str_match_variable| & \verb|str_match_all_variable| & chr subject, chr/list/function, ... \\
-    \verb|df_match_variable| & NA & df subject, chr/list/function, ... 
-  \end{tabular}
-  \caption{Functions of the namedCapture package. The first argument of each funtion specifies the subject, as either a character vector (for \texttt{str\_*}) functions, or a data.frame (for \texttt{df\_match\_variable}). The \texttt{*\_named} functions require three arguments, whereas the \texttt{*\_variable} functions take a variable number of arguments.}
-  \label{tab:functions}
+  \centering \begin{tabular}{llll} First match & All matches &
+  Arguments \\ \hline \verb|str_match_named|
+  & \verb|str_match_all_named| & chr subject, chr pattern,
+  functions \\ \verb|str_match_variable|
+  & \verb|str_match_all_variable| & chr subject, chr/list/function,
+  ... \\ \verb|df_match_variable| & NA & df subject,
+  chr/list/function, ...  \end{tabular} \caption{Functions of the
+  namedCapture package. The first argument of each funtion specifies
+  the subject, as either a character vector (for \texttt{str\_*})
+  functions, or a data.frame
+  (for \texttt{df\_match\_variable}). The \texttt{*\_named} functions
+  require three arguments, whereas the \texttt{*\_variable} functions
+  take a variable number of arguments.}  \label{tab:functions}
 \end{table}
 
 \bibliography{RJreferences}
@@ -265,3 +328,7 @@ naming objects, and referring to objects by name. In particular, the namedCaptur
   Country\\
   (ORCiD if desired)\\
   \email{author3@work}}
+
+\end{article}
+
+\end{document}
