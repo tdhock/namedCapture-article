@@ -314,6 +314,7 @@ chr.pos.pattern <- paste0(
     "-",
     "(?<chromEnd>[0-9,]+)",
   ")?")
+
 @
 
 The pattern above is defined using paste0, writing each named capture
@@ -370,7 +371,7 @@ matches, but only the first is returned by \verb|str_match_named|. Use
 \verb|str_match_all_named| to get all matches in each subject (not just the
 first match).
 
-<<allChrPos>>
+<<allChrPos>>=
 
 namedCapture::str_match_all_named(
   chr.pos.subject, chr.pos.pattern, conversion.list)
@@ -383,38 +384,15 @@ match.
 
 \subsection{Named output}
 
-If the pattern specifies the \verb|name| group, then it will be used
-for the rownames of the output, and it will not be included as a
-column. For example the pattern below uses \verb|name| for the first group:
+If the subject is named, its names will be used to name the output
+(rownames or list names).
 
-<<namePattern>>
-
-name.pattern <- paste0(
-  "(?<name>chr.*?)",
-  ":",
-  "(?<chromStart>[0-9,]+)",
-  "(?:",
-    "-",
-    "(?<chromEnd>[0-9,]+)",
-  ")?")
-(named.mat <- namedCapture::str_match_named(
-  subject.vec, name.pattern, conversion.list))
-(named.list <- namedCapture::str_match_all_named(
-  subject.vec, name.pattern, conversion.list))
-
-@
-
-This feature makes it easy to select particular elements of the extracted data by name.
-Note that if the subject is named, its names will be used to name the output (rownames or list names).
-
-<<namedSubject>>
+<<namedSubject>>=
 
 named.subject.vec <- c(
   ten="chr10:213,054,000-213,055,000",
   M="chrM:111,000",
-  nomatch="this will not match",
-  missing=NA, # neither will this.
-  two"chr1:110-111 chr2:220-222") # two possible matches.
+  two="chr1:110-111 chr2:220-222") # two possible matches.
 namedCapture::str_match_named(
   named.subject.vec, chr.pos.pattern, conversion.list)
 namedCapture::str_match_all_named(
@@ -422,16 +400,27 @@ namedCapture::str_match_all_named(
 
 @
 
-If the subject has names, and the `name` group is specified, then the subject names are used to name the output (and the `name` column is included in the output).
+This feature makes it easy to select particular subjects/matches by
+name. 
 
-<<namedSubjectPattern>>
+If the pattern specifies the \verb|name| group, then it will be used
+for the rownames of the output, and it will not be included as a
+column. However if the subject has names, and the `name` group is
+specified, then the subject names are used to name the output (and the
+`name` column is included in the output).
 
-named.subject.vec <- c(
-  ten="chr10:213,054,000-213,055,000",
-  M="chrM:111,000",
-  nomatch="this will not match",
-  missing=NA, # neither will this.
-  two"chr1:110-111 chr2:220-222") # two possible matches.
+<<namedSubjectPattern>>=
+
+name.pattern <- paste0(
+  "(?<name>.*?)",
+  ":",
+  "(?<chromStart>[0-9,]+)",
+  "(?:",
+    "-",
+    "(?<chromEnd>[0-9,]+)",
+  ")?")
+namedCapture::str_match_named(
+  unname(named.subject.vec), name.pattern, conversion.list)
 namedCapture::str_match_named(
   named.subject.vec, name.pattern, conversion.list)
 namedCapture::str_match_all_named(
@@ -451,10 +440,10 @@ subject. Using the variable argument syntax, we can omit
 paste0, and simply supply the pattern strings to
 \verb|str_match_variable| directly,
 
-<<strMatchNamed>>
+<<strMatchNamed>>=
 
-namedCapture::str_match_named(
-  subject.vec, 
+namedCapture::str_match_variable(
+  chr.pos.subject, 
   "(?<chrom>chr.*?)",
   ":",
   "(?<chromStart>[0-9,]+)",
@@ -470,10 +459,10 @@ strings, and adding names to the corresponding arguments. For
 \verb|name1="pattern1"|, namedCapture internally generates/uses the regex
 \verb|(?<name1>pattern1)|.
 
-<<namedArgs>>
+<<namedArgs>>=
 
-namedCapture::str_match_named(
-  subject.vec, 
+namedCapture::str_match_variable(
+  chr.pos.subject, 
   chrom="chr.*?",
   ":",
   chromStart="[0-9,]+",
@@ -487,10 +476,10 @@ namedCapture::str_match_named(
 We can add type conversion functions on the same line as the
 definition of the named group:
 
-<<inlineconversion>
+<<inlineconversion>>=
 
-namedCapture::str_match_named(
-  subject.vec, 
+namedCapture::str_match_variable(
+  chr.pos.subject, 
   chrom="chr.*?",
   ":",
   chromStart="[0-9,]+", int.from.digits,
@@ -505,33 +494,33 @@ Note the repetition in the chromStart/End lines -- the same pattern
 and type conversion function is used for each group. This repetition
 can be avoided by creating and using a sub-pattern list variable,
 
-<<subPatternList>>
+<<subPatternList>>=
 
-pos.pattern <- list("[0-9,]+", int.from.digits)
-namedCapture::str_match_named(
-  subject.vec, 
+int.pattern <- list("[0-9,]+", int.from.digits)
+namedCapture::str_match_variable(
+  chr.pos.subject, 
   chrom="chr.*?",
   ":",
-  chromStart=pos.pattern,
+  chromStart=int.pattern,
   "(?:",
     "-",
-    chromEnd=pos.pattern,
+    chromEnd=int.pattern,
   ")?")
 
 @
 
 Finally, the non-capturing group can be replaced by an un-named list:
 
-<<nonCapturingList>>
+<<nonCapturingList>>=
 
-namedCapture::str_match_named(
-  subject.vec, 
+namedCapture::str_match_variable(
+  chr.pos.subject, 
   chrom="chr.*?",
   ":",
-  chromStart=pos.pattern,
+  chromStart=int.pattern,
   list(
     "-",
-    chromEnd=pos.pattern,
+    chromEnd=int.pattern
   ), "?")
 
 @
@@ -560,7 +549,7 @@ each match from a multi-line text file. In this section we demonstrate
 how to use \verb|str_match_all_variable| to extract data.frames from a
 loosely structured text file.
 
-<<trackDb>>
+<<trackDb>>=
 
 trackDb.txt.gz <- system.file(
   "extdata", "trackDb.txt.gz", package="namedCapture")
@@ -570,7 +559,7 @@ trackDb.vec <- readLines(trackDb.txt.gz)
 
 Some representative lines from that file are shown below.
 
-<<catTrackDB>>
+<<catTrackDB>>=
 
 cat(trackDb.vec[78:107], sep="\n")
 
@@ -580,7 +569,7 @@ Each block of text begins with "track" and includes several lines of
 data before the block ends with two consecutive newlines. That pattern
 is coded below using a regex:
 
-<<fieldsDF>>
+<<fieldsDF>>=
 
 fields.df <- namedCapture::str_match_all_variable(
   trackDb.vec,
@@ -605,7 +594,7 @@ Each block has a variable number of lines/fields. Each line starts
 with a field name, followed by a space, followed by the field
 value. That regex is coded below:
 
-<<fieldsList>>
+<<fieldsList>>=
 
 fields.list <- namedCapture::str_match_all_named(
   fields.df[, "fields"], paste0(
@@ -630,14 +619,14 @@ sample names into separate columns (using a single regex for the
 track). It also demonstrates how to use nested named capture groups
 (via named lists which contain named regex strings).
 
-<<trackDbMatchAll>>
+<<trackDbMatchAll>>=
 
 name.pattern <- list(
   cellType=".*?",
   "_",
   sampleName=list(
     "McGill",
-    sampleID=int.from.digits),
+    sampleID=int.pattern),
   dataType="Coverage|Peaks",
   "|",
   "[^\n]+")
@@ -682,7 +671,7 @@ This function can greatly simplify the code required to create numeric
 data columns from character data columns. For example consider the
 following data which was output from the SLURM sacct command line program.
 
-<<sacctdf>>
+<<sacctdf>>=
 
 (sacct.df <- data.frame(
   Elapsed=c(
@@ -703,36 +692,36 @@ hours:minutes:seconds), and base job id (which is the number before
 the underscore in the JobID column). We could start by converting
 those character columns to integers via:
 
-<<rangePat>>
+<<rangePat>>=
 
 range.pattern <- list(
   "[[]",
-  task1=int.from.digits,
+  task1=int.pattern,
   list(
     "-",
-    taskN=int.from.digits,
+    taskN=int.pattern
   ), "?",
   "[]]")
 task.pattern <- list(
-  task=int.from.digits,
+  task=int.pattern,
   "|",#either one task(above) or range(below)
   range.pattern)
 (task.df <- namedCapture::df_match_variable(
   sacct.df,
   JobID=list(
-    job=int.from.digits,
+    job=int.pattern,
     "_",
     task.pattern,
     list(
       "[.]",
-      type=".*",
+      type=".*"
     ), "?"),
   Elapsed=list(
-    hours=int.from.digits,
+    hours=int.pattern,
     ":",
-    minutes=int.from.digits,
+    minutes=int.pattern,
     ":",
-    seconds=int.from.digits)))
+    seconds=int.pattern)))
 
 @
 
@@ -759,7 +748,7 @@ differences in syntax:
   specified after the pattern, using mutate. 
 \end{itemize}
 
-<<logsubject>>
+<<logsubject>>=
 
 log.subject <- '198.214.42.14 - - [21/Jul/1995:14:31:46 -0400] "GET /images/ HTTP/1.0" 200 17688
 lahal.ksc.nasa.gov - - [24/Jul/1995:12:42:40 -0400] "GET /images/USA-logosmall.gif HTTP/1.0" 200 234
@@ -775,19 +764,19 @@ slo.eei.upmc.edu - - [25/Jul/1995:09:33:01 -0400] "GET /images/KSC-logosmall.gif
 log.subject.vec <- strsplit(log.subject, split="\n")[[1]]
 result.list <- list()
 result.list$namedCapture <- namedCapture::str_match_variable(
-  subject.vec,
+  log.subject.vec,
   "\\[",
   time="[^]]*", function(x)as.POSIXct(x, format="%d/%b/%Y:%H:%M:%S %z"),
   "\\]",
   ' "GET ',
   list(
     "[^[:space:]]+[.]", 
-    filetype='[^[:space:].?"]+', tolower,
+    filetype='[^[:space:].?"]+', tolower
   ), "?")
 library(rex)
 library(dplyr)
 result.list$rex <- re_matches(
-  subject.vec,
+  log.subject.vec,
   rex(
     "[",
     capture(name = "time",
@@ -816,7 +805,7 @@ Section~\ref{sec:df_match_variable}. In this
 comparison we define the patterns using a list of character vectors,
 with each group name on the same line as its sub-pattern.
 
-<<tidyr>>
+<<tidyr>>=
 
 range.vec <- c(
   "\\[",
