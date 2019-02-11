@@ -8,3 +8,5 @@
 *.blg
 auto
 template.zip
+.Rhistory
+*.rds

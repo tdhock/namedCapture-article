@@ -34,7 +34,9 @@
   begin by describing the history of regular expressions and their
   usage in R. We then describe the new features of the namedCapture
   package, and provide detailed comparisons with related R packages
-  (\CRANpkg{rex}, \CRANpkg{stringr}, \CRANpkg{stringi}, \CRANpkg{tidyr}, \CRANpkg{rematch2}, \CRANpkg{re2r}).}
+  (\CRANpkg{rex}, \CRANpkg{stringr}, \CRANpkg{stringi}, \CRANpkg{tidyr},
+  \CRANpkg{rematch2}, \CRANpkg{re2r}).}
+
 \section{Introduction}
 
 Today regular expression libraries are powerful and widespread tools
@@ -428,17 +430,18 @@ namedCapture::str_match_all_named(
 
 @
 
-\subsection{Variable argument syntax: \code{*\_variable} functions}
+\subsection{Readable and efficient variable argument syntax used in \code{str\_match\_variable}}
 
 In this section we introduce the variable argument syntax used in the
-\code{*\_variable} functions, which is motivated by the desire to avoid
-repetitive/boilerplate code. In the previous sections we defined the pattern using the
-paste0 boilerplate, which is used to break the pattern over several
-lines for clarity. We begin by introducing
+\code{*\_variable} functions. This new syntax is both readable and
+efficient, because it is motivated by the desire to avoid
+repetitive/boilerplate code. In the previous sections we defined the
+pattern using the paste0 boilerplate, which is used to break the
+pattern over several lines for clarity. We begin by introducing
 \code{str\_match\_variable}, which extracts the first match from each
-subject. Using the variable argument syntax, we can omit
-paste0, and simply supply the pattern strings to
-\code{str\_match\_variable} directly,
+subject. Using the variable argument syntax, we can omit paste0, and
+simply supply the pattern strings to \code{str\_match\_variable}
+directly,
 
 <<strMatchNamed>>=
 
@@ -541,7 +544,7 @@ In summary, the \code{str\_match\_variable} function takes a variable number of 
   the argument list.
 \end{itemize}
 
-\subsection{Extract all patterns from a file}
+\subsection{Extract all matches from a multi-line text file via \code{str\_match\_all\_variable}}
 
 The variable argument syntax can also be used with
 \code{str\_match\_all\_variable}, which is for the common case of extracting
@@ -645,7 +648,7 @@ match.df["bcell_McGill0091Coverage", c("cellType", "sampleName", "sampleID", "da
 Exercise for the reader: modify the above in order to capture
 three additional columns (red, green, blue) from the color field.
 
-\subsection{Extracting new columns from a character column in a data.frame}
+\subsection{\code{df\_match\_variable} extracts new columns from character columns in a data.frame}
 
 \label{sec:df_match_variable}
 
@@ -708,10 +711,10 @@ or the previously defined range pattern:
 <<taskPat>>=
 
 task.pattern <- list(
-  "_",
-  task=int.pattern,
-  "|",#either one task(above) or range(below)
-  range.pattern)
+  "_", list(
+    task=int.pattern,
+    "|",#either one task(above) or range(below)
+    range.pattern))
 namedCapture::df_match_variable(sacct.df, JobID=task.pattern)
 
 @ 
@@ -745,13 +748,13 @@ which tabular data are extracted using the corresponding pattern. The
 final result is a data frame with additional columns for each named
 capture group. 
 
-\section{Comparisons}
+\section{Comparisons with other R packages}
 \label{sec:comparisons}
 
 In this section we compare the proposed functions in the \CRANpkg{namedCapture}
-package with other R packages for regular expressions.
+package with similar functions in other R packages for regular expressions.
 
-\subsection{Comparison with rex}
+\subsection{Comparing \CRANpkg{namedCapture} variable argument syntax with \CRANpkg{rex}}
 \label{sec:rex}
 In this section we compare namedCapture verbose variable argument
 syntax with the similar rex package. We have adapted the log
@@ -767,7 +770,7 @@ log.lines <- strsplit(log.subject, split="\n")[[1]]
 
 @ 
 
-The text processing challenge is to extract the time and filetype for
+The goal is to extract the time and filetype for
 each log line. The code below uses the \code{rex} function to define a
 pattern for matching the filetype: 
 
@@ -840,92 +843,195 @@ namedCapture::str_match_variable(
 
 @ 
 
-Overall both rex and namedCapture provide good support for defining
-regular expresions using a verbose, readable, and thus user-friendly
-syntax. However there are two major differences:
+Overall both \CRANpkg{rex} and \CRANpkg{namedCapture} provide good
+support for defining regular expresions using a verbose, readable, and
+thus user-friendly syntax. However there are two major differences:
 \begin{itemize}
-\item namedCapture assumes the user knows regular expressions and can
-  write them as R string literals; rex assumes the user knows its functions,
-  which generate regex strings. For the capture group time,
+\item \CRANpkg{namedCapture} assumes the user knows regular
+  expressions and can write them as R string literals; \CRANpkg{rex}
+  assumes the user knows its functions, which generate regex
+  strings. For the capture group time,
   \verb|none_of("]") %>% zero_or_more()| in rex gets translated to the
   regex string \verb|[^]]*|. Thus rex code is a bit more verbose than
   namedCapture.
-\item In namedCapture type conversion functions are specified on the
-  same line as the capture group name/pattern, whereas in rex conversions are
+\item In \CRANpkg{namedCapture} type conversion functions can be specified on the
+  same line as the capture group name/pattern, whereas in \CRANpkg{rex} type conversions are
   specified as a post-processing step on the result of \code{re\_matches}. 
 \end{itemize}
 
-\subsection{Comparison with tidyr}
+\subsection{Comparing \code{namedCapture::df\_match\_variable} with \code{tidyr::extract}}
 \label{sec:tidyr}
 
-Below I show comparisons between \code{tidyr::extract} and
-\code{namedCapture::df\_match\_variable} which was introduced in
-Section~\ref{sec:df_match_variable}. In this
-comparison we define the patterns using a list of character vectors,
-with each group name on the same line as its sub-pattern.
+The \CRANpkg{tidyr} package provides functionality similar to
+\code{namedCapture::df\_match\_variable}, which was introduced in
+Section~\ref{sec:df_match_variable}. Below we show how
+\code{tidyr::extract} can be used to compute the same result as was
+obtained in Section~\ref{sec:df_match_variable} on the data from the
+SLURM sacct command line program. We begin by defining a pattern which
+matches a range of integers in square brackets:
 
-<<tidyr>>=
+<<tidyr.range>>=
 
-range.vec <- c(
-  "\\[",
-  task1="[0-9]+", 
-  "(?:-",#begin optional end of range.
-  taskN="[0-9]+", 
-  ")?", #end is optional.
-  "\\]")
-task.vec <- c(
-  "(?:",#begin alternate
-  task="[0-9]+", 
-  "|",#either one task(above) or range(below)
-  range.vec,
-  ")")#end alternate
-regex.list <- list(
-  JobID=c(
-    job="[0-9]+", 
-    "_",
-    task.vec,
-    "(?:[.]",
-    type=".*",
-    ")?"),
-  Elapsed=c(
-    hours="[0-9]+",
-    ":",
-    minutes="[0-9]+",
-    ":",
-    seconds="[0-9]+"))
-tidyr.df <- sacct.df
-for(col.name in names(regex.list)){
-  regex.vec <- regex.list[[col.name]]
-  is.group <- names(regex.vec)!=""
-  format.vec <- ifelse(is.group, "(%s)", "%s")
-  group.vec <- sprintf(format.vec, regex.vec)
-  regex <- paste(group.vec, collapse="")
-  group.names <- names(regex.vec)[is.group]
-  tidyr.df <- tidyr::extract(
-    tidyr.df, col.name, group.names, regex, convert=TRUE)
-}
-tidyr.df
+tidyr.range.pattern <- "\\[([0-9]+)(?:-([0-9]+))?\\]"
+tidyr::extract(
+  sacct.df, "JobID", c("task1", "taskN"), 
+  tidyr.range.pattern, remove=FALSE)
+
+@ 
+
+Note the pattern string includes un-named capture groups, because
+named capture is not supported. Names must therefore be specified in
+the third argument of \code{extract}. Next, we define a pattern which
+matches either a single task ID, or a range in square brackets:
+
+<<tidyr.task>>=
+
+tidyr.task.pattern <- paste0(
+  "_(?:([0-9]+)|",
+  tidyr.range.pattern, 
+  ")")
+tidyr::extract(
+  sacct.df, "JobID", c("task", "task1", "taskN"), 
+  tidyr.task.pattern, remove=FALSE)
+
+@ 
+
+In the code below we define a pattern that matches the entire job string:
+
+<<tidyr.job>>=
+
+tidyr.job.pattern <- paste0(
+  "([0-9]+)", 
+  tidyr.task.pattern,
+  "(?:[.](.*))?")
+(job.df <- tidyr::extract(
+  sacct.df, "JobID", 
+  c("job", "task", "task1", "taskN", "type"), 
+  tidyr.job.pattern))
+
+@ 
+
+Finally, we use another pattern to extract the components of the
+elapsed time. Note that \code{convert=TRUE} means to use
+\code{utils::type.convert} on the result of each extracted group.
+
+<<tidyr2>>=
+
+tidyr::extract(
+  job.df, "Elapsed", c("hours", "minutes", "seconds"),
+  "([0-9]+):([0-9]+):([0-9]+)",
+  convert=TRUE)
 
 @
 
-Here are some observations from the
-comparison:
+Overall \code{tidyr::extract} functions
+similarly to
+\code{namedCapture::df\_match\_variable}, with the following
+differences:
 \begin{itemize}
-\item The namedCapture code is shorter. The tidyr code is longer
-  mostly because the for loop that you see below for tidyr is hidden
-  inside the definition of \code{df\_match\_variable}.
-\item Converting extracted character groups to numeric column types is
-  specified via the convert argument of tidyr::extract, which uses
-  utils::type.convert. In contrast =namedCapture= supports arbitrary
-  group-specific type conversion functions, which are specified= on the
+\item Because \code{tidyr::extract} uses the ICU C library, which does
+  not support named capture groups, it requires specifying the group
+  names in a separate argument. In contrast, the
+  \CRANpkg{namedCapture} variable argument syntax supports specifying
+  capture group names via R argument names on the same line as the
+  corresponding sub-pattern.
+\item Whereas \code{tidyr::extract(convert=TRUE)} always uses
+  \code{utils::type.convert} for type conversion,
+  \code{namedCapture::df\_match\_variable} supports arbitrary
+  group-specific type conversion functions, which are specified on the
   same line as the corresponding name/pattern.
+\item Because one call to \code{tidyr::extract} extracts data from one
+  column in the subject data frame, it must be called twice (once for
+  the Elapsed column, once for the JobID column). In contrast, one
+  call to \code{namedCapture::df\_match\_variable} can be used to
+  extract data from multiple columns in the subject data frame. 
 \end{itemize}
 
-\subsection{Timings}
+\subsection{Comparing computation times of R regex packages}
 \label{sec:timings}
 
-TODO re2r timing figure.
+<<allPCRE, echo=FALSE, fig=TRUE, height=3, width=5>>=
 
+library(data.table)
+library(ggplot2)
+timing.dt.list <- list()
+titles <- c(
+  log="First match, character vector",
+  sacct="First match, two columns of a data.frame",
+  trackDb="All matches in multi-line text file")
+pkg.colors <- c(
+  namedCapture="#E41A1C",#red
+  tidyr="#377EB8",#blue
+  rex="#4DAF4A",#green
+  rematch2="#984EA3",#purple
+  utils="#FF7F00",#orange
+  "#FFFF33",#yellow
+  stringi="#A65628",#brown
+  re2r="#F781BF",#pink
+  stringr="#999999")#grey
+for(task in c("log", "sacct", "trackDb")){
+  timing.rds <- paste0(task, ".rds")
+  if(file.exists(timing.rds)){
+    timing.dt.list[[task]] <- data.table(
+      task, title=titles[[task]], readRDS(timing.rds))
+  }
+}
+timing.dt <- do.call(rbind, timing.dt.list)
+timing.dt[, seconds := time/1e9]
+timing.dt[, expr.chr := paste(expr)]
+t2 <- namedCapture::df_match_variable(
+ timing.dt, expr.chr=list(
+   pkg=".*?",
+   "::",
+   fun=".*"))
+stats.dt <- t2[, list(
+  median=median(seconds),
+  q25=quantile(seconds, 0.25),
+  q75=quantile(seconds, 0.75)
+  ), by=list(task, title, expr.chr.pkg, subject.size, expr)]
+gg.legend <- ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(. ~ title)+
+  scale_y_log10("seconds")+
+  scale_color_manual(values=pkg.colors)+
+  scale_fill_manual(values=pkg.colors)+
+  scale_x_log10(
+    "subject size",
+    limits=c(10, 1e7))+
+  geom_ribbon(aes(
+    subject.size, ymin=q25, ymax=q75, fill=expr.chr.pkg),
+    data=stats.dt,
+    alpha=0.5)+
+  geom_line(aes(
+    subject.size, median, color=expr.chr.pkg),
+    data=stats.dt)
+gg.dl <- directlabels::direct.label(gg.legend, "last.polygons")
+print(gg.dl)
+
+@ 
+
+
+<<pathological, echo=FALSE, fig=TRUE, height=3>>=
+
+pathological <- readRDS("pathological.rds")
+log.legend <- ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  ggtitle("Timing regular expressions in R, log scale")+
+  scale_y_log10("seconds")+
+  scale_x_log10(
+    "subject/pattern size",
+    limits=c(1, 30),
+    breaks=c(1, 5, 10, 15, 20, 25))+
+  geom_point(aes(
+    N, time/1e9, color=expr),
+    shape=1,
+    data=pathological)
+log.dl <- directlabels::direct.label(log.legend, "last.polygons")
+print(log.dl)
+
+@ 
 \section{Discussion and conclusions}
 
 \bibliography{RJreferences}
