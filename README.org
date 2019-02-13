@@ -1,0 +1,45 @@
+Article to submit to R Journal about the verbose, readable,
+user-friendly syntax for regular expressions provided by the
+namedCapture package.
+
+** 13 Feb 2019
+
+Observed that PCRE is much slower than other regex engines for finding
+all matches in a long string of text. Is this a bug?
+- Example subject: [[file:trackDb-31622.txt]]
+- R timing script: [[file:trackDb.gregexpr.R]]
+- Python timing script: [[file:trackDb.py]]
+
+Using both R and Python interfaces, I observed that matching is much
+slower for PCRE:
+- PCRE from R = median 0.57 seconds.
+- TRE from R = median 0.03 seconds.
+
+#+BEGIN_SRC R-transcript
+> stats.dt[subject.size==max(subject.size)]
+         expr subject.size    median        q25        q75
+1:  perl=TRUE     31622.78 0.5658699 0.54575069 0.57090807
+2: perl=FALSE     31622.78 0.0334391 0.03343219 0.03345432
+> 
+#+END_SRC
+
+Asymptotic analysis:
+
+[[file:figure-trackDb-gregexpr.png]]
+
+In Python:
+
+#+BEGIN_SRC 
+tdhock@recycled:~/projects/namedCapture-article(master*)$ python trackDb.py trackDb.txt 
+get_list('re2')
+         3302 function calls in 0.034 seconds
+...
+get_list('re')
+         3549 function calls (3541 primitive calls) in 0.019 seconds
+...
+get_list('pcre')
+         9789 function calls in 3.809 seconds
+...
+tdhock@recycled:~/projects/namedCapture-article(master*)$ 
+#+END_SRC
+
