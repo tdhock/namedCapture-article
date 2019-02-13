@@ -8,7 +8,7 @@ library(tidyr)
     "14022192_[1-3]", "14022204_[4]"), stringsAsFactors=FALSE))
 
 timing.dt.list <- list()
-for(subject.size in 10^(2:3)){
+for(subject.size in 10^seq(2, 5, by=0.5)){
   subject.list <- list()
   for(name in names(sacct.dt)){
     subject.list[[name]] <- rep(sacct.dt[[name]], l=subject.size)

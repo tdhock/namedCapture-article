@@ -950,21 +950,25 @@ differences:
 \subsection{Comparing computation times of R regex packages}
 \label{sec:timings}
 
-<<allPCRE, echo=FALSE, fig=TRUE, height=3, width=5>>=
+<<allPCRE, echo=FALSE, results=hide, fig=TRUE, height=3, width=6>>=
 
 library(data.table)
 library(ggplot2)
 timing.dt.list <- list()
 titles <- c(
-  log="First match, character vector",
-  sacct="First match, two columns of a data.frame",
-  trackDb="All matches in multi-line text file")
+  log="First match
+character vector",
+  sacct="First match
+two data.frame columns",
+  trackDb="All matches
+multi-line text file")
 pkg.colors <- c(
   namedCapture="#E41A1C",#red
   tidyr="#377EB8",#blue
   rex="#4DAF4A",#green
   rematch2="#984EA3",#purple
   utils="#FF7F00",#orange
+  base="#FF7F00",#orange
   "#FFFF33",#yellow
   stringi="#A65628",#brown
   re2r="#F781BF",#pink
@@ -996,38 +1000,64 @@ gg.legend <- ggplot()+
   scale_y_log10("seconds")+
   scale_color_manual(values=pkg.colors)+
   scale_fill_manual(values=pkg.colors)+
+  coord_cartesian(
+    xlim=c(1e2, 1e8),
+    ylim=c(1e-4, 1e3),
+    expand=FALSE)+
   scale_x_log10(
     "subject size",
-    limits=c(10, 1e7))+
+    breaks=c(1e3, 1e5))+
   geom_ribbon(aes(
-    subject.size, ymin=q25, ymax=q75, fill=expr.chr.pkg),
+    subject.size, ymin=q25, ymax=q75, fill=expr.chr.pkg, group=expr),
     data=stats.dt,
     alpha=0.5)+
   geom_line(aes(
-    subject.size, median, color=expr.chr.pkg),
-    data=stats.dt)
-gg.dl <- directlabels::direct.label(gg.legend, "last.polygons")
-print(gg.dl)
+    subject.size, median, color=expr.chr.pkg, group=expr),
+    data=stats.dt)+
+  directlabels::geom_dl(aes(
+    subject.size, median, color=expr.chr.pkg, 
+    label=ifelse(grepl("utils", expr), paste(expr), ifelse(
+      grepl("^base", expr), 
+      sub("FALSE", "F", sub("TRUE", "T", sub("^base::", "", expr))),
+      sub("::.*", "", expr)))),
+    method=list(cex=0.65, "last.polygons"),
+    data=stats.dt)+
+  ## directlabels::geom_dl(aes(
+  ##   subject.size, median, color=expr.chr.pkg, label=sub("::", "::\n", expr)),
+  ##   method=list(cex=0.45, "last.polygons"),
+  ##   data=stats.dt)+
+  guides(color="none",fill="none")
+print(gg.legend)
 
 @ 
 
 
-<<pathological, echo=FALSE, fig=TRUE, height=3>>=
+<<pathological, results=hide, echo=FALSE, fig=TRUE, height=3>>=
 
-pathological <- readRDS("pathological.rds")
+library(data.table)
+pathological <- data.table(readRDS("pathological.rds"))
+pathological[, seconds := time/1e9]
+path.stats <- pathological[, list(
+  median=median(seconds),
+  q25=quantile(seconds, 0.25),
+  q75=quantile(seconds, 0.75)
+  ), by=list(N, expr)]
+library(ggplot2)
 log.legend <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
-  ggtitle("Timing regular expressions in R, log scale")+
   scale_y_log10("seconds")+
   scale_x_log10(
     "subject/pattern size",
     limits=c(1, 30),
     breaks=c(1, 5, 10, 15, 20, 25))+
-  geom_point(aes(
-    N, time/1e9, color=expr),
-    shape=1,
-    data=pathological)
+  geom_ribbon(aes(
+    N, ymin=q25, ymax=q75, fill=expr, group=expr),
+    data=path.stats,
+    alpha=0.5)+
+  geom_line(aes(
+    N, median, color=expr, group=expr),
+    data=path.stats)
 log.dl <- directlabels::direct.label(log.legend, "last.polygons")
 print(log.dl)
 
