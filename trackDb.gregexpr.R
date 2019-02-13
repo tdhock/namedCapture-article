@@ -7,6 +7,7 @@ timing.dt.list <- list()
 result.list <- list()
 for(subject.size in 10^seq(2, 4.5, by=0.5)){
   subject.vec <- rep(trackDb.lines, l=subject.size)
+  writeLines(subject.vec, "trackDb.txt")
   subject <- paste(subject.vec, collapse="\n")
   timing <- microbenchmark::microbenchmark("perl=TRUE"={
     result.list$PCRE <- gregexpr(pattern, subject, perl=TRUE)[[1]]
@@ -33,8 +34,10 @@ gg <- ggplot()+
   geom_line(aes(
     subject.size, median, color=expr),
     data=stats.dt)+
-  scale_x_log10(limits=c(1e2, 1e5))+
-  scale_y_log10()
+  scale_x_log10(
+    limits=c(1e2, 1e5))+
+  scale_y_log10(
+    "seconds (median line and quartile bands)")    
 directlabels::direct.label(gg, "last.polygons")
 
 gg <- ggplot()+
@@ -45,7 +48,12 @@ gg <- ggplot()+
   geom_line(aes(
     subject.size, median, color=expr),
     data=stats.dt)+
-  xlim(0, 1e5)
-directlabels::direct.label(gg, "last.polygons")
-
+  scale_y_continuous(
+    "seconds (median line and quartile bands)")+
+  scale_x_continuous(
+    limits=c(0, 40000))
+dl <- directlabels::direct.label(gg, "last.polygons")
+png("figure-trackDb-gregexpr.png")
+print(dl)
+dev.off()
 
