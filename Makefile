@@ -14,3 +14,7 @@ trackDb.rds: trackDb.R
 	R --vanilla < $<
 sacct.rds: sacct.R
 	R --vanilla < $<
+pcre2demo.out: pcre2demo
+	./pcre2demo -g trackDb-31622.txt
+pcre2demo: pcre2demo.c
+	gcc -g -Wall $< -lpcre2-8 -o pcre2demo
