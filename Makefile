@@ -18,3 +18,7 @@ pcre2demo.out: pcre2demo
 	./pcre2demo -g trackDb-31622.txt
 pcre2demo: pcre2demo.c
 	gcc -g -Wall $< -lpcre2-8 -o pcre2demo
+pcre_demo.out: pcre_demo
+	./pcre_demo -g trackDb-31622.txt
+pcre_demo: pcre_demo.c
+	gcc -Wall $< -lpcre -o pcre_demo

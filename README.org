@@ -2,6 +2,39 @@ Article to submit to R Journal about the verbose, readable,
 user-friendly syntax for regular expressions provided by the
 namedCapture package.
 
+** 14 Feb 2019
+
+Investigation about R-PCRE slowness.
+- Does not seem to be an issue with PCRE itself -- I compiled command
+  line programs that use PCRE1 and PCRE2 (without R) which have
+  asymptotic timings similar to R-TRE.
+
+[[file:figure-trackDb-PCRE-R-1-2.png]]
+
+- One difference is that [[file:pcre_demo.c]] uses non-zero options,
+  whereas grep.c in R source code always uses options=0. However this
+  does not seem to be the issue because options are only used when a
+  zero-length match is encountered, which does not happen for my data.
+- Another difference is that gregexpr_perl in grep.c in R source code
+  uses a buffer of 1024 matches to begin with, and then doubles it if
+  it is not big enough, whereas the command line pcre_demo.c program
+  uses no such buffers and memory reallocation. However that does not
+  seem to be the issue because gregexpr_Regexc (TRE) in grep.c in R
+  source code does the same thing, and is not slow.
+- A difference between PCRE and TRE in R is that PCRE calls
+  extract_match_and_groups whereas TRE does not. However that does not
+  seem to be the issue, because groups are extracted in the command
+  line program.
+- A difference is that pcre_demo does not study whereas R does. That
+  does not seem to be the issue (changed to NULL in R grep.c but still
+  slow).
+- Is pcre_exec being called with different starts? No...
+- It doesn't Have to do with the if(capture_count) block because it is
+  slow even when there are no capture groups.
+- What is the difference bewteen regexpr_perl and gregexpr_perl? There
+  does not seem to be any speed issue with regexpr_perl. 
+- TODO run a profiler to find out where the slow part is.
+
 ** 13 Feb 2019
 
 Observed that PCRE is much slower than other regex engines for finding
