@@ -1,6 +1,17 @@
 Article to submit to R Journal about the verbose, readable,
 user-friendly syntax for regular expressions provided by the
 namedCapture package.
+** 15 Feb 2019
+
+Found https://stackoverflow.com/questions/31216299/r-faster-gregexpr-for-very-large-strings
+and http://r.789695.n4.nabble.com/strsplit-perl-TRUE-gregexpr-perl-TRUE-very-slow-for-long-strings-td4727902.html
+maybe give PCRE_NO_UTF8_CHECK flag?
+https://stat.ethz.ch/pipermail/r-help/2008-October/178451.html
+
+Tried R-2.14 -- first version with PCRE named capture support -- still
+slow.
+
+TODO try converting pcre_demo.c to R pkg.
 
 ** 14 Feb 2019
 
