@@ -13,6 +13,8 @@ to linear (after applying the patch to R-3.5.1)
 
 [[file:figure-trackDb-Ronly-fast.png]]
 
+Code to reproduce the figure above: [[file:figure-trackDb-Ronly.R]]
+
 ** 15 Feb 2019
 
 Found https://stackoverflow.com/questions/31216299/r-faster-gregexpr-for-very-large-strings
