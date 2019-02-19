@@ -10,7 +10,7 @@ for(subject.size in 10^seq(2, 4.5, by=0.5)){
     result.list$PCRE <- gregexpr(pattern, subject, perl=TRUE)[[1]]
   }, "R.TRE"={
     result.list$TRE <- gregexpr(pattern, subject, perl=FALSE)[[1]]
-  }, times=5)
+   }, times=5)
   print(sapply(result.list, length))
   timing.df.list[[paste(subject.size)]] <- data.frame(subject.size, timing)
 }

@@ -1,0 +1,14 @@
+Index: src/main/grep.c
+===================================================================
+--- src/main/grep.c	(revision 76128)
++++ src/main/grep.c	(working copy)
+@@ -2393,8 +2393,8 @@
+ 		       allocVector(INTSXP, bufsize*capture_count), &clb);
+     PROTECT_WITH_INDEX(matchbuf = allocVector(INTSXP, bufsize), &mb);
+     PROTECT_WITH_INDEX(matchlenbuf = allocVector(INTSXP, bufsize), &mlb);
++    int rc, slen = (int) strlen(string);
+     while (!foundAll) {
+-	int rc, slen = (int) strlen(string);
+ 	rc = pcre_exec(re_pcre, re_pe, string, slen, start, 0, ovector,
+ 		       ovector_size);
+ 	pcre_exec_error(rc, n);

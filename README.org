@@ -1,6 +1,18 @@
 Article to submit to R Journal about the verbose, readable,
 user-friendly syntax for regular expressions provided by the
 namedCapture package.
+** 19 Feb 2019
+
+[[file:linear-time-gregexpr-perl.patch]] moves strlen before the while
+loop, and reduces the time complexity from quadratic (before the
+patch)
+
+[[file:figure-trackDb-Ronly-slow.png]]
+
+to linear (after applying the patch to R-3.5.1)
+
+[[file:figure-trackDb-Ronly-fast.png]]
+
 ** 15 Feb 2019
 
 Found https://stackoverflow.com/questions/31216299/r-faster-gregexpr-for-very-large-strings
