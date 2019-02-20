@@ -16,7 +16,8 @@ The culprit is the =substring= function in R, which has time
 complexity that is quadratic as the number of substrings and the
 subject text size increases. The code [[file:figure-substring-bug.R]]
 produces the following figure which shows the quadratic time
-complexity:
+complexity of the base R substring function, and the linear time
+complexity of the stringi::stri_sub function:
 
 [[file:figure-substring-bug.png]]
 
