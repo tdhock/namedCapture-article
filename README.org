@@ -1,6 +1,27 @@
 Article to submit to R Journal about the verbose, readable,
 user-friendly syntax for regular expressions provided by the
 namedCapture package.
+
+** 20 Feb 2019
+
+[[file:figure-trackDb-pkgs.R]] produces the following figure, which
+shows that applying the =gregexpr_perl= patch recovers the linear time
+complexity for the gregexpr function, but the other functions/packages
+(rematch2, namedCapture, rex) which use it to extract captured
+sub-patterns are still at quadratic time complexity:
+
+[[file:figure-trackDb-pkgs.png]]
+
+The culprit is the =substring= function in R, which has time
+complexity that is quadratic as the number of substrings and the
+subject text size increases. The code [[file:figure-substring-bug.R]]
+produces the following figure which shows the quadratic time
+complexity:
+
+[[file:figure-substring-bug.png]]
+
+I suspect the issue is again related to repeated calls to strlen in C.
+
 ** 19 Feb 2019
 
 [[file:linear-time-gregexpr-perl.patch]] moves strlen before the while

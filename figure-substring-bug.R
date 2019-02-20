@@ -21,6 +21,8 @@ timing.dt[, ms := time/1e6]
   ), by=list(N)])
 library(ggplot2)
 gg <- ggplot()+
+  ggtitle(
+    "Bug: substring in R is quadratic but should be linear time complexity")+
   geom_ribbon(aes(
     N, ymin=q25, ymax=q75),
     alpha=0.5,
@@ -32,4 +34,6 @@ gg <- ggplot()+
     "N = number of substrings = nchar(text)")+
   scale_y_continuous(
     "milliseconds (median line and quartile bands)")
+png("figure-substring-bug.png")
 print(gg)
+dev.off()
