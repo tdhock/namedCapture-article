@@ -25,7 +25,7 @@ gg <- ggplot()+
   directlabels::geom_dl(aes(
     subject.size, median, color=expr, label=expr),
     method="last.polygons",
-    data=stats.dt[grepl("^R", expr)])+
+    data=stats.dt[!grepl("PCRE[12]", expr)])+
   directlabels::geom_dl(aes(
     subject.size, median, color=expr, label=sub("big.", "", expr)),
     method="last.qp",

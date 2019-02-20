@@ -11,7 +11,7 @@ pathological.rds: pathological.R
 log.rds: log.R
 	R --vanilla < $<
 trackDb.rds: trackDb.R
-	R --vanilla < $<
+	~/R/R-3.5.1/bin/R --vanilla < $<
 sacct.rds: sacct.R
 	R --vanilla < $<
 pcre2demo.out: pcre2demo

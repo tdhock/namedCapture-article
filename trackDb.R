@@ -37,18 +37,18 @@ for(subject.size in 10^seq(2, 4.5, by=0.5)){
     m <- stringi::stri_match_all(paste(subject, collapse="\n"), regex=pattern)[[1]]
     data.frame(m[,-1]) %>% mutate(
       sampleID=as.integer(X4))
-  }, "rematch2::re_match_all"={
-    tib <- rematch2::re_match_all(paste(subject, collapse="\n"), named.pattern)
-  }, "rex::re_matches"={
-    re_matches(paste(subject, collapse="\n"), named.pattern, global=TRUE)[[1]] %>% mutate(
-      sampleID=as.integer(sampleID))
-  }, "base::gregexpr(perl=TRUE)"={
-    g.res <- gregexpr(
-      named.pattern, paste(subject, collapse="\n"), perl=TRUE)[[1]]
-  }, "base::gregexpr(perl=FALSE)"={
-    gregexpr(pattern, paste(subject, collapse="\n"), perl=FALSE)[[1]]
+  ## }, "base::gregexpr(perl=TRUE)"={
+  ##   g.res <- gregexpr(
+  ##     named.pattern, paste(subject, collapse="\n"), perl=TRUE)[[1]]
+  ## }, "base::gregexpr(perl=FALSE)"={
+  ##   gregexpr(pattern, paste(subject, collapse="\n"), perl=FALSE)[[1]]
   ## }, "namedCapture::str_match_all_named"={
   ##   namedCapture::str_match_all_named(paste(subject, collapse="\n"), named.pattern)[[1]]
+  ## }, "rematch2::re_match_all"={
+  ##   tib <- rematch2::re_match_all(paste(subject, collapse="\n"), named.pattern)
+  ## }, "rex::re_matches"={
+  ##   re_matches(paste(subject, collapse="\n"), named.pattern, global=TRUE)[[1]] %>% mutate(
+  ##     sampleID=as.integer(sampleID))
   }, "namedCapture::str_match_all_variable"={
     int.pattern <- list("[0-9]+", as.integer)
     trackName.pattern <- list(
@@ -67,7 +67,9 @@ for(subject.size in 10^seq(2, 4.5, by=0.5)){
       "(?:\n[^\n]+)*",
       "\\s+bigDataUrl ",
       bigDataUrl="[^\n]+")
-  }, times=5)
+  },
+  times=5)
+  print(timing)
   timing.dt.list[[paste(subject.size)]] <- data.table(subject.size, timing)
 }
 timing.dt <- do.call(rbind, timing.dt.list)

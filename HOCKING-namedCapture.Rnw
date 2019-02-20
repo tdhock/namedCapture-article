@@ -976,8 +976,10 @@ pkg.colors <- c(
 for(task in c("log", "sacct", "trackDb")){
   timing.rds <- paste0(task, ".rds")
   if(file.exists(timing.rds)){
+    dt <- readRDS(timing.rds)
+    dt[, seconds := NULL]
     timing.dt.list[[task]] <- data.table(
-      task, title=titles[[task]], readRDS(timing.rds))
+      task, title=titles[[task]], dt)
   }
 }
 timing.dt <- do.call(rbind, timing.dt.list)
