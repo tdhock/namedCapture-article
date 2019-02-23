@@ -1,4 +1,4 @@
-HOCKING-namedCapture.pdf: HOCKING-namedCapture.Rnw RJreferences.bib pathological.rds log.rds trackDb.rds sacct.rds
+HOCKING-namedCapture.pdf: HOCKING-namedCapture.Rnw RJreferences.bib pathological.rds log.rds trackDb.rds sacct.rds figure-timings-examples.pdf figure-timings-pathological.pdf
 	rm -f *.aux *.bbl
 	R CMD Sweave HOCKING-namedCapture.Rnw
 	pdflatex HOCKING-namedCapture
@@ -6,6 +6,10 @@ HOCKING-namedCapture.pdf: HOCKING-namedCapture.Rnw RJreferences.bib pathological
 	pdflatex HOCKING-namedCapture
 	pdflatex HOCKING-namedCapture
 	rm HOCKING-namedCapture.tex
+figure-timings-examples.pdf: figure-timings-examples.R trackDb.rds sacct.rds log.rds
+	R --vanilla < $<
+figure-timings-pathological.pdf: figure-timings-pathological.R pathological.rds
+	R --vanilla < $<
 pathological.rds: pathological.R
 	R --vanilla < $<
 log.rds: log.R
