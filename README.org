@@ -2,7 +2,9 @@ Article to submit to R Journal about the verbose, readable,
 user-friendly syntax for regular expressions provided by the
 namedCapture package.
 ** 25 Feb 2019
-The 
+Submitted. New source file [[file:hocking.tex]] generated manually from
+[[file:HOCKING-namedCapture.Rnw]] in order to work with R journal
+submission requirements, via [[file:RJwrapper.tex]]
 ** 20 Feb 2019
 
 [[file:figure-trackDb-pkgs.R]] produces the following figure, which
