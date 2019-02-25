@@ -23,7 +23,7 @@ namedCapture:::variable_args_list(
 pattern <- "track ((.*?)_(McGill([0-9,]+))(Coverage|Peaks)|[^\n]+)(?:\n[^\n]+)*\\s+bigDataUrl ([^\n]+)"
 named.pattern <- "track (?P<trackName>(?P<cellType>.*?)_(?P<sampleName>McGill(?P<sampleID>[0-9,]+))(?P<dataType>Coverage|Peaks)|[^\n]+)(?:\n[^\n]+)*\\s+bigDataUrl (?P<bigDataUrl>[^\n]+)"
 timing.dt.list <- list()
-for(subject.size in 10^seq(2, 4, by=0.5)){
+for(subject.size in 10^seq(2, 5, by=0.5)){
   subject <- rep(trackDb.lines, l=subject.size)
   timing <- microbenchmark::microbenchmark("re2r::re2_match_all"={
     m <- re2r::re2_match_all(paste(subject, collapse="\n"), named.pattern)[[1]]

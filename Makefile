@@ -1,3 +1,5 @@
+RJwrapper.pdf: hocking.tex hocking.bib figure-timings-examples.pdf figure-timings-pathological.pdf
+	R -e 'tools::texi2pdf("RJwrapper.tex")'
 HOCKING-namedCapture.pdf: HOCKING-namedCapture.Rnw RJreferences.bib pathological.rds log.rds trackDb.rds sacct.rds figure-timings-examples.pdf figure-timings-pathological.pdf
 	rm -f *.aux *.bbl
 	R CMD Sweave HOCKING-namedCapture.Rnw
@@ -8,14 +10,16 @@ HOCKING-namedCapture.pdf: HOCKING-namedCapture.Rnw RJreferences.bib pathological
 	rm HOCKING-namedCapture.tex
 figure-timings-examples.pdf: figure-timings-examples.R trackDb.rds sacct.rds log.rds
 	R --vanilla < $<
-figure-timings-pathological.pdf: figure-timings-pathological.R pathological.rds
+figure-timings-pathological.pdf: figure-timings-pathological.R pathological.rds pathological-backref.rds
 	R --vanilla < $<
 pathological.rds: pathological.R
+	R --vanilla < $<
+pathological-backref.rds: pathological-backref.R
 	R --vanilla < $<
 log.rds: log.R
 	R --vanilla < $<
 trackDb.rds: trackDb.R
-	~/R/R-3.5.1/bin/R --vanilla < $<
+	R --vanilla < $<
 sacct.rds: sacct.R
 	R --vanilla < $<
 pcre2demo.out: pcre2demo

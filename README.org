@@ -1,7 +1,8 @@
 Article to submit to R Journal about the verbose, readable,
 user-friendly syntax for regular expressions provided by the
 namedCapture package.
-
+** 25 Feb 2019
+The 
 ** 20 Feb 2019
 
 [[file:figure-trackDb-pkgs.R]] produces the following figure, which

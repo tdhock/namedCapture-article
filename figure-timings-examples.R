@@ -75,6 +75,6 @@ gg.legend <- ggplot()+
   ##   method=list(cex=0.45, "last.polygons"),
   ##   data=stats.dt)+
   guides(color="none",fill="none")
-pdf("figure-timings-examples.pdf", 6, 3)
+pdf("figure-timings-examples.pdf", 6, 2.5)
 print(gg.legend)
 dev.off()
