@@ -1,5 +1,4 @@
-### R code from vignette source 'HOCKING-namedCapture.Rnw'
-### Encoding: UTF-8
+### R code from vignette source '/home/tdhock/projects/namedCapture-article/hocking.Rnw'
 
 ###################################################
 ### code chunk number 1: subject

@@ -1,6 +1,10 @@
 Article to submit to R Journal about the verbose, readable,
 user-friendly syntax for regular expressions provided by the
 namedCapture package.
+** 27 Feb 2019
+- Some minor fixes, move Figure with C libraries to beginning.
+- main file to edit is now [[file:hocking.Rnw]] and Makefile takes care of
+  creating submission.zip
 ** 25 Feb 2019
 Submitted. New source file [[file:hocking.tex]] generated manually from
 [[file:HOCKING-namedCapture.Rnw]] in order to work with R journal

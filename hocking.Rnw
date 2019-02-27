@@ -1,33 +1,11 @@
-\documentclass[a4paper]{report}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{RJournal}
-\usepackage{amsmath,amssymb,array}
-\usepackage{booktabs}
-
 \newcommand{\sectiontidyr}{Comparing \code{namedCapture::df\_match\_variable} with \code{tidyr::extract}}
 \newcommand{\sectiontrackDb}{Extract all matches from a multi-line text file via \code{str\_match\_all\_variable}}
 \newcommand{\sectiontimings}{Comparing computation times of R regex packages}
 \newcommand{\sectiondf}{\code{df\_match\_variable} extracts new columns from character columns in a data.frame}
 \newcommand{\sectionrex}{Comparing \CRANpkg{namedCapture} variable argument syntax with \CRANpkg{rex}}
 
-%\setsecnumdepth{subsection}
-
-%% load any required packages here
-
-\begin{document}
-
-%% do not edit, for illustration only
-\sectionhead{Contributed research article}
-\volume{XX}
-\volnumber{YY}
-\year{20ZZ}
-\month{AAAA}
-
-\begin{article}
-
-  \title{Comparing \CRANpkg{namedCapture} with other R packages for 
-    regular expressions}
+\title{Comparing \CRANpkg{namedCapture} with other R packages for 
+  regular expressions}
 
 \author{by Toby Dylan Hocking}
 
@@ -106,17 +84,24 @@ syntax \citep{pcre1-changelog.txt}. Starting in 2006, it supported the
 \verb|(?P<labelname>...)| and \verb|(?'labelname'...)| syntax, to be
 consistent with Perl and .NET \citep{pcre1-changelog.txt}.
 
+
+
 The first regular expression support in R was provided by the TRE C
 library \citep{TRE}. Although TRE supports capture groups, it does not
 allow capture groups to be named. PCRE was first included in R version
 1.6.0 in 2002 \citep{R.NEWS.1.txt}. The base R functions
 \code{regexpr} and \code{gregexpr} can be given the \code{perl=TRUE}
 argument in order to use the PCRE library, or \code{perl=FALSE} to use
-the TRE C library. 
-Although TRE and PCRE offer similar features and performance for the vast majority of real-world
-subjects and patterns, 
-some malicious patterns can make PCRE run
-quite a bit slower than TRE (see Section~``\sectiontimings'').
+the TRE C library. Recently created packages
+(\CRANpkg{stringi}, \CRANpkg{re2r}) have provided R interfaces to the
+ICU and RE2 libraries. Each library has different characteristics in
+terms of supported regex features and time complexity
+(Table~\ref{tab:regex-libraries}).
+%% Although TRE and PCRE offer similar features and
+%% performance for the vast majority of real-world subjects and patterns,
+%% some malicious patterns can make PCRE run quite a bit slower than TRE
+%% (see Section~``\sectiontimings''). 
+
 
 The original versions of \code{regexpr} and \code{gregexpr} only
 returned the position/length of the text matched by an entire regex,
@@ -126,46 +111,20 @@ named capture group \citep{HockingBug2011}, which was accepted into R
 starting with version 2.14. I presented a lightning talk at useR 2011
 that showcased the new functionality \citep{HockingUseR2011}.
 
+\begin{table}
+  \centering
+  \begin{tabular}{r|cccc}
+    C library & RE2 & PCRE & ICU & TRE \\
+    Named capture groups  & yes & yes & no & no\\
+    Worst case linear time & yes & no & no & no \\
+    Backreferences & no & yes & yes & yes 
+  \end{tabular}
+  \caption{\label{tab:regex-libraries}
+    Features of C libraries for regular expressions usable in R.
+    }
+\end{table}
+
 \subsection{Related R packages for capturing regular expressions}
-
-\begin{table}
-  \centering
-\begin{tabular}{llll}
-Package      & First match              & All matches             & C library  \\
-\hline
- \pkg{base}         & \code{regexpr}                  & \code{gregexpr}                & PCRE/TRE \\
-  \pkg{utils}        & \code{strcapture}               & NA                      & PCRE/TRE \\
-  \CRANpkg{rematch2}     & \code{re\_match}                 & \code{re\_match\_all}            & PCRE/TRE\\
-  \CRANpkg{namedCapture} & \code{str\_match\_*}, \code{df\_match\_variable}          & \code{str\_match\_all\_*}     & PCRE/RE2\\
-  \CRANpkg{rex}          & \code{re\_matches(global=FALSE)} & \code{re\_matches(global=TRUE)} & PCRE\\
-  \CRANpkg{stringr}      & \code{str\_match}                & \code{str\_match\_all}           & ICU\\
-  \CRANpkg{stringi}      & \code{stri\_match}               & \code{stri\_match\_all}          & ICU\\
-  \CRANpkg{tidyr}        & \code{extract}                  & NA                      & ICU\\
-  \CRANpkg{re2r}         & \code{re2\_match}                & \code{re2\_match\_all}           & RE2
-\end{tabular}
-  \caption{R packages that provide functions for extracting first/all regex matches, and C library used.}
-  \label{tab:Clib}
-\end{table}
-
-
-\begin{table}
-  \centering
-\begin{tabular}{llllll}
-Package & subject & pattern      & outputs     & named & types \\
-\hline
-\pkg{base} & chr     & chr          & mat/list    & yes   & no    \\
-\code{utils::strcapture} & chr     & chr          & df          & no    & some  \\
-\CRANpkg{rematch2} & chr     & chr          & tibble      & yes   & no    \\
-\CRANpkg{namedCapture} & chr/df/dt   & verbose      & mat/list/df/dt       & yes   & any   \\
-\CRANpkg{rex} & chr     & verbose      & df/list          & yes   & no    \\
-\CRANpkg{stringr} & chr     & chr          & mat/list    & no    & no    \\
-\CRANpkg{stringi} & chr     & chr          & mat/list    & no    & no    \\
-\code{tidyr::extract} & df/dt   & chr          & df/dt       & no    & some  \\
-\CRANpkg{re2r} & chr     & chr/compiled & df/list     & yes   & no    
-\end{tabular}
-  \caption{R packages provide different options for subject/pattern input, extracted text outputs, named capture groups, and type conversion.}
-  \label{tab:features}
-\end{table}
 
 Since the introduction of named capture support in base R version
 2.14, several packages have been developed which use this
@@ -240,6 +199,45 @@ capture groups in the regex pattern). The pattern is used to find the
 first match in each subject. The return value is a data.frame with the
 same number of rows as the input, but without the subject column, and
 with an additional column for each capture group.
+
+\begin{table}
+  \centering
+\begin{tabular}{llll}
+Package      & First match              & All matches             & C library  \\
+\hline
+ \pkg{base}         & \code{regexpr}                  & \code{gregexpr}                & PCRE/TRE \\
+  \pkg{utils}        & \code{strcapture}               & NA                      & PCRE/TRE \\
+  \CRANpkg{rematch2}     & \code{re\_match}                 & \code{re\_match\_all}            & PCRE/TRE\\
+  \CRANpkg{namedCapture} & \code{str\_match\_*}, \code{df\_match\_variable}          & \code{str\_match\_all\_*}     & PCRE/RE2\\
+  \CRANpkg{rex}          & \code{re\_matches(global=FALSE)} & \code{re\_matches(global=TRUE)} & PCRE\\
+  \CRANpkg{stringr}      & \code{str\_match}                & \code{str\_match\_all}           & ICU\\
+  \CRANpkg{stringi}      & \code{stri\_match}               & \code{stri\_match\_all}          & ICU\\
+  \CRANpkg{tidyr}        & \code{extract}                  & NA                      & ICU\\
+  \CRANpkg{re2r}         & \code{re2\_match}                & \code{re2\_match\_all}           & RE2
+\end{tabular}
+  \caption{R packages that provide functions for extracting first/all regex matches, and C library used.}
+  \label{tab:Clib}
+\end{table}
+
+
+\begin{table}
+  \centering
+\begin{tabular}{llllll}
+Package/function & subject & pattern      & outputs     & named & types \\
+\hline
+\pkg{base} & chr     & chr          & mat/list    & yes   & no    \\
+\code{utils::strcapture} & chr     & chr          & df          & no    & some  \\
+\CRANpkg{rematch2} & chr     & chr          & tibble      & yes   & no    \\
+\CRANpkg{namedCapture} & chr/df/dt   & verbose      & mat/list/df/dt       & yes   & any   \\
+\CRANpkg{rex} & chr     & verbose      & df/list          & yes   & no    \\
+\CRANpkg{stringr} & chr     & chr          & mat/list    & no    & no    \\
+\CRANpkg{stringi} & chr     & chr          & mat/list    & no    & no    \\
+\code{tidyr::extract} & df/dt   & chr          & df/dt       & no    & some  \\
+\CRANpkg{re2r} & chr     & chr/compiled & df/list     & yes   & no    
+\end{tabular}
+  \caption{R packages provide different options for subject/pattern input, extracted text outputs, named capture groups, and type conversion.}
+  \label{tab:features}
+\end{table}
 
 
 \section{The \CRANpkg{namedCapture} package}
@@ -816,8 +814,8 @@ rex.pattern <- rex(
 
 @ 
 
-Finally, the rex pattern is used with \code{re\_matches} in order to
-extract a data table, and the mutate function is used for type
+Finally, the pattern is used with \code{re\_matches} in order to
+extract a data table, and the \code{mutate} function is used for type
 conversion:
 
 <<reMatches>>=
@@ -829,7 +827,7 @@ re_matches(log.lines, rex.pattern) %>% mutate(
 @
 
 
-Using the namedCapture package we begin by defining an analogous
+Using the \CRANpkg{namedCapture} package we begin by defining an analogous
 filetype pattern as a list containing literal regex strings and a type
 conversion function:
 
@@ -977,7 +975,7 @@ The first example involves extracting all matches from a multi-line
 text file, as discussed in Section~``\sectiontrackDb.''
 Figure~\ref{fig:timings-examples} (left) shows comparisons with
 packages \CRANpkg{re2r}, \CRANpkg{stringr}, \CRANpkg{stringi},
-\CRANpkg{rematch2}, \CRANpkg{rex}). We expected small differences
+\CRANpkg{rematch2}, \CRANpkg{rex}. We expected small differences
 between the packages, on the order of constant factors. Surprisingly,
 the lines for the \CRANpkg{rex} and \CRANpkg{rematch2} packages have
 larger slopes than the other algorithms, which suggests quadratic
@@ -1025,7 +1023,7 @@ the worst case time complexity that can be achieved. Such information
 should be considered along with other features
 (Table~\ref{tab:regex-libraries}) when choosing a regex library. For
 example, guaranteed linear time complexity is essential for avoiding
-denial-of-service attacks in situations where (potentially malicious)
+denial-of-service attacks in situations where potentially malicious
 users are permitted to define the regular expression pattern.
 
 The final example involves using a pathological regular expression of
@@ -1052,7 +1050,7 @@ that for guaranteed fast matching, RE2 must be used, via the \CRANpkg{re2r} or
 
 \section{Discussion and conclusions}
 
-Our comparisons showed how similar operations can be performed by
+Our comparisons showed how similar operations can be performed by \CRANpkg{namedCapture} and
 other R packages (e.g. \CRANpkg{tidyr} and \CRANpkg{rex}). Our
 empirical timings highlight the relative advantages and disadvantages
 of the different R packages we tested. For example, we observed that
@@ -1067,12 +1065,12 @@ of other packages (\CRANpkg{stringi}, \CRANpkg{stringr},
 
 The article presented the \CRANpkg{namedCapture} package, along with
 detailed comparisons with other R packages for regular expressions.  A
-unique feature of \CRANpkg{namedCapture} package is its compact and
+unique feature of the \CRANpkg{namedCapture} package is its compact and
 readable syntax for defining regular expressions in R code. We showed
 how this syntax can be used to extract data tables from a variety of
 non-tabular text data. We also highlighted several other features of
-the \CRANpkg{namedCapture} package, which include support for
-arbitrary type conversion functions, named output based on the
+the \CRANpkg{namedCapture} package, which include support for 
+arbitrary type conversion functions, named output based on subject names and the
 \code{name} capture group, and two regex engines (PCRE and RE2). PCRE
 can be used for backreferences (e.g. for matching HTML tags), but
 otherwise RE2 should be preferred for guaranteed linear time
@@ -1085,20 +1083,7 @@ package will be useful and inspiring for other package developers.
 article can be freely downloaded from
 \url{https://github.com/tdhock/namedCapture-article}
 
-\begin{table}
-  \centering
-  \begin{tabular}{r|cccc}
-    C library & RE2 & PCRE & ICU & TRE \\
-    Named capture groups  & yes & yes & no & no\\
-    Worst case linear time & yes & no & no & no \\
-    Backreferences & no & yes & yes & yes 
-  \end{tabular}
-  \caption{\label{tab:regex-libraries}
-    Features of C libraries for regular expressions usable in R.
-    }
-\end{table}
-
-\bibliography{RJreferences}
+\bibliography{hocking}
 
 \address{Toby Dylan Hocking\\
   School of Informatics, Computing, and Cyber Systems\\
@@ -1106,8 +1091,3 @@ article can be freely downloaded from
   Flagstaff, Arizona\\
   USA\\
   \email{toby.hocking@nau.edu}}
-
-
-\end{article}
-
-\end{document}

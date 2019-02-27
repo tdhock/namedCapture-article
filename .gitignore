@@ -10,3 +10,9 @@ auto
 template.zip
 .Rhistory
 *.rds
+submission
+submission.zip
+pcre*demo
+trackDb.txt
+trackDb.txt.gz
+trackDb.test.csv
