@@ -100,7 +100,7 @@ with the contributions of Tracy Tims to Python 1.0.0, which used the
 syntax was a Python extension to the standard.
 
 Perl-Compatible Regular Expressions (PCRE) is a C library that is now
-a widely used in free/open-source software tools such as Python and R.
+widely used in free/open-source software tools such as Python and R.
 PCRE introduced support for named capture in 2003, based on the Python
 syntax \citep{pcre1-changelog.txt}. Starting in 2006, it supported the
 \verb|(?P<labelname>...)| and \verb|(?'labelname'...)| syntax, to be
@@ -112,11 +112,11 @@ allow capture groups to be named. PCRE was first included in R version
 1.6.0 in 2002 \citep{R.NEWS.1.txt}. The base R functions
 \code{regexpr} and \code{gregexpr} can be given the \code{perl=TRUE}
 argument in order to use the PCRE library, or \code{perl=FALSE} to use
-the TRE C library. A major difference between the two libraries is
-that TRE provides fast linear time match algorithms, whereas PCRE
-is exponential time in the worst case. Although for most patterns the
-time difference is negligible, malicious patterns can make PCRE run
-quite a bit slower (see Section~``\sectiontimings'').
+the TRE C library. 
+Although TRE and PCRE offer similar features and performance for the vast majority of real-world
+subjects and patterns, 
+some malicious patterns can make PCRE run
+quite a bit slower than TRE (see Section~``\sectiontimings'').
 
 The original versions of \code{regexpr} and \code{gregexpr} only
 returned the position/length of the text matched by an entire regex,
@@ -174,7 +174,7 @@ C libraries (Table~\ref{tab:Clib}). Each package supports different
 options for subject/pattern input, extracted text outputs, named
 capture groups, and type conversion (Table~\ref{tab:features}).
 
-The \pkg{utils} package now includes the strcapture function, which uses the
+The \pkg{utils} package now includes the \code{strcapture} function, which uses the
 base \code{regexec} function (also introduced in R-2.14) to extract the first
 match as a data.frame with one row per subject, and one column per
 capture group. It allows capture group names/types to be specified in
