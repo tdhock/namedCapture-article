@@ -1,3 +1,5 @@
+Title: Comparing namedCapture with other R packages for regular expressions
+
 Abstract: Regular expressions are powerful tools for manipulating
   non-tabular textual data. For many tasks (visualization, machine
   learning, etc), tables of numbers must be extracted from such data
