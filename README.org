@@ -1,3 +1,16 @@
+Title: Comparing namedCapture with other R packages for regular expressions
+
+Abstract: Regular expressions are powerful tools for manipulating
+  non-tabular textual data. For many tasks (visualization, machine
+  learning, etc), tables of numbers must be extracted from such data
+  before processing by other R functions. We present the R package
+  namedCapture, which facilitates such tasks by providing a new
+  user-friendly syntax for defining regular expressions in R code. We
+  begin by describing the history of regular expressions and their
+  usage in R. We then describe the new features of the namedCapture
+  package, and provide detailed comparisons with related R packages
+  (rex, stringr, stringi, tidyr, rematch2, re2r).
+
 Article to submit to R Journal about the verbose, readable,
 user-friendly syntax for regular expressions provided by the
 namedCapture package.
