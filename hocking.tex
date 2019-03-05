@@ -131,7 +131,7 @@ Since the introduction of named capture support in base R version
 functionality, and other packages have been developed which use other
 C libraries (Table~\ref{tab:Clib}). Each package supports different
 options for subject/pattern input, extracted text outputs, named
-capture groups, and type conversion (Table~\ref{tab:features}).
+capture groups, and type conversion (Table~\ref{tab:features}). 
 
 The \pkg{utils} package now includes the \code{strcapture} function, which uses the
 base \code{regexec} function (also introduced in R-2.14) to extract the first
@@ -228,14 +228,14 @@ Package/function & subject & pattern      & outputs     & named & types \\
 \pkg{base} & chr     & chr          & mat/list    & yes   & no    \\
 \code{utils::strcapture} & chr     & chr          & df          & no    & some  \\
 \CRANpkg{rematch2} & chr     & chr          & tibble      & yes   & no    \\
-\CRANpkg{namedCapture} & chr/df/dt   & verbose      & mat/list/df/dt       & yes   & any   \\
+\CRANpkg{namedCapture} & chr/df   & verbose      & mat/list/df       & yes   & any   \\
 \CRANpkg{rex} & chr     & verbose      & df/list          & yes   & no    \\
 \CRANpkg{stringr} & chr     & chr          & mat/list    & no    & no    \\
 \CRANpkg{stringi} & chr     & chr          & mat/list    & no    & no    \\
-\code{tidyr::extract} & df/dt   & chr          & df/dt       & no    & some  \\
+\code{tidyr::extract} & df   & chr          & df       & no    & some  \\
 \CRANpkg{re2r} & chr     & chr/compiled & df/list     & yes   & no    
 \end{tabular}
-  \caption{R packages provide different options for subject/pattern input, extracted text outputs, named capture groups, and type conversion.}
+\caption{R packages provide different options for subject/pattern input, extracted text outputs, named capture groups, and type conversion. Abbreviations: chr=character vector, df=data.frame, mat=character matrix. }
   \label{tab:features}
 \end{table}
 
