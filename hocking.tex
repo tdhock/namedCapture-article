@@ -251,7 +251,7 @@ preferred because it is guaranteed to find a match in linear time (see
 Section~\sectiontimings). However, PCRE supports some regex features
 (e.g. backreferences) that RE2 does not. To tell
 \CRANpkg{namedCapture} to use PCRE rather than RE2,
-\code{options(namedCapture.engine="PCRE"} can be specified. For
+\code{options(namedCapture.engine="PCRE")} can be specified. For
 patterns that are supported by both engines, \CRANpkg{namedCapture}
 functions return the resulting match in the standard output format
 described below.
@@ -260,19 +260,20 @@ The main design features of the namedCapture package are
 inspired by the base R system, which provides good support for
 naming objects, and referring to objects by name. In particular, the namedCapture package supports 
 \begin{itemize}
-\item Specifying capture groups with names in a regular expression
-  string, and stopping with an informative error if there are un-named
-  capture groups.
-\item Output with rownames or list names taken from the \code{name} capture group.
-\item A syntax for specifying capture group names via named arguments
-  in R code.
-\item Specifying a function for each named capture group,
-  which converts captured text from character to other arbitrary types.
+\item Standard syntax for specifying capture groups with names in a
+  regular expression string, and stopping with an informative error if
+  there are un-named capture groups.
+\item A new/alternative syntax for specifying capture group names via
+  named arguments in R code.
+\item Output with rownames or list names taken from subject names.
+\item Output with rownames taken from the \code{name} capture group.
+\item Specifying a type conversion function for each named capture
+  group.
 \item Saving sub-patterns to R variables, and re-using them multiple
   times in one or several patterns in order to avoid repetition.
 \end{itemize}
 
-The main functions provided by the namedCapture package are summarized
+The main functions provided by the \CRANpkg{namedCapture} package are summarized
 in Table~\ref{tab:functions}. We begin by introducing the \code{*\_named} functions, which take three arguments.
 
 \begin{table}
@@ -284,7 +285,7 @@ in Table~\ref{tab:functions}. We begin by introducing the \code{*\_named} functi
   \code{df\_match\_variable} & NA & df subject,  chr/list/function, ...
   \end{tabular}
   \caption{Functions of the
-  namedCapture package. The first argument of each function specifies
+  \CRANpkg{namedCapture} package. The first argument of each function specifies
   the subject, as either a character vector (for \texttt{str\_*})
   functions, or a data.frame
   (for \texttt{df\_match\_variable}). The \texttt{*\_named} functions
@@ -310,12 +311,8 @@ For an example, we consider subjects containing genomic positions:
 
 \begin{Schunk}
 \begin{Sinput}
-> chr.pos.subject <- c(
-+   "chr10:213,054,000-213,055,000",
-+   "chrM:111,000",
-+   "this will not match",
-+   NA, # neither will this.
-+   "chr1:110-111 chr2:220-222") # two possible matches.
+> chr.pos.subject <- c("chr10:213,054,000-213,055,000", "chrM:111,000", 
++   "this will not match", NA, "chr1:110-111 chr2:220-222") 
 > 
 \end{Sinput}
 \end{Schunk}
@@ -381,22 +378,17 @@ and chromEnd:
 
 \begin{Schunk}
 \begin{Sinput}
-> int.from.digits <- function(captured.text){
-+   as.integer(gsub("[^0-9]", "", captured.text))
-+ }
-> conversion.list <- list(
-+   chromStart=int.from.digits,
-+   chromEnd=int.from.digits)
-> (match.df <- namedCapture::str_match_named(
-+   chr.pos.subject, chr.pos.pattern, conversion.list))
+> int.from.digits <- function(captured.text)as.integer(gsub("[^0-9]", "", captured.text))
+> conversion.list <- list(chromStart=int.from.digits, chromEnd=int.from.digits)
+> match.df <- namedCapture::str_match_named(
++   chr.pos.subject, chr.pos.pattern, conversion.list)
+> str(match.df)
 \end{Sinput}
 \begin{Soutput}
-  chrom chromStart  chromEnd
-1 chr10  213054000 213055000
-2  chrM     111000        NA
-3  <NA>         NA        NA
-4  <NA>         NA        NA
-5  chr1        110       111
+'data.frame':	5 obs. of  3 variables:
+ $ chrom     : chr  "chr10" "chrM" NA NA ...
+ $ chromStart: int  213054000 111000 NA NA 110
+ $ chromEnd  : int  213055000 NA NA NA 111
 \end{Soutput}
 \begin{Sinput}
 > 
@@ -453,10 +445,8 @@ If the subject is named, its names will be used to name the output
 
 \begin{Schunk}
 \begin{Sinput}
-> named.subject <- c(
-+   ten="chr10:213,054,000-213,055,000",
-+   M="chrM:111,000",
-+   two="chr1:110-111 chr2:220-222") # two possible matches.
+> named.subject <- c(ten="chr10:213,054,000-213,055,000", 
++   M="chrM:111,000", two="chr1:110-111 chr2:220-222")
 > namedCapture::str_match_named(
 +   named.subject, chr.pos.pattern, conversion.list)
 \end{Sinput}
@@ -791,13 +781,16 @@ skeletalMuscleCtrl     "\nsuperTrack on show\nshortLabel skeletalMuscleCtrl\n"
 \end{Sinput}
 \end{Schunk}
 
+% TODO maybe delete this part, and only include the last part which
+% creates trackName sampleID etc columns?
+
 Note that this function assumes that its subject is a character vector
 with one element for each line in a file. The elements are pasted
 together using newline as a separator, and the regex is used to find
 all matches in the resulting multi-line string. The code above creates
 a data frame with one row for each track block, with rownames given by
-the track line (because of the capture group named name), and one
-fields column which is a string with the rest of the data in that
+the track line (because of the \code{name} capture group), and one
+\code{fields} column which is a string with the rest of the data in that
 block.
 
 Each block has a variable number of lines/fields. Each line starts
@@ -1310,7 +1303,7 @@ Figure~\ref{fig:timings-all} shows comparisons with packages
 \CRANpkg{rematch2}, \CRANpkg{rex}. We expected small differences
 between the packages, on the order of constant factors. Using R-3.5.2
 (left panel of Figure~\ref{fig:timings-all}), the lines for the
-\CRANpkg{rex} and \CRANpkg{rematch2} packages have larger slopes than
+\CRANpkg{rex} and \CRANpkg{rematch2} packages have significantly larger slopes than
 the other packages
 (\CRANpkg{namedCapture}, \CRANpkg{stringr}, \CRANpkg{stringi}, and \CRANpkg{re2r}). This can be explained because \CRANpkg{rex} and \CRANpkg{rematch2} use the base \code{gregexpr} and \code{substring} functions,
 which are implemented using inefficient quadratic time algorithms in
@@ -1321,7 +1314,7 @@ R-devel, and R-core member Tomas Kalibera has fixed the problem. In R-3.6.0 (rig
   \includegraphics[width=\textwidth]{figure-timings-all}
   \vskip -0.5cm
   \caption{\label{fig:timings-all} Computation time for finding
-    all matches in a text file is plotted as a function of number of lines (median line and quartile bands over 5 timings). Such timings
+    all matches in a text file is plotted as a function of number of lines (median lines and quartile bands over 5 timings). Such timings
     are typical of real-world subjects/patterns. R-3.5.2 used
     quadratic time algorithms for \code{gregexpr}/\code{substring}
     (left), which were changed to linear time algorithms in R-3.6.0
@@ -1332,7 +1325,7 @@ R-devel, and R-core member Tomas Kalibera has fixed the problem. In R-3.6.0 (rig
   \includegraphics[width=\textwidth]{figure-timings-first}
   \vskip -0.5cm
   \caption{\label{fig:timings-first} Computation time for finding the first match is plotted as
-    a function of subject size (median line and quartile bands over 5
+    a function of subject size (median lines and quartile bands over 5
     timings). Such timings are typical for real-world subjects and patterns such as the two examples shown. }
 \end{figure}
 
@@ -1349,7 +1342,7 @@ extract data for each of two columns of a data frame, as discussed in
 Section~``\sectiontidyr.'' Figure~\ref{fig:timings-first} (right)
 shows a comparison with \CRANpkg{tidyr}. Again we expected small
 differences between the packages, and we observed linear time
-complexity for both \CRANpkg{tidyr} and \CRANpkg{namedCapture}.
+complexity for both \CRANpkg{namedCapture} and \CRANpkg{tidyr}.
 
 The fourth example involves using a pathological regular expression of
 increasing size (with backreferences) on a subject of increasing size.
@@ -1410,7 +1403,7 @@ package will be useful and inspiring for other package developers.
   \includegraphics[width=\textwidth]{figure-timings-pathological}
   \vskip -0.5cm
   \caption{\label{fig:timings-pathological} Computation time is
-    plotted as a function of subject/pattern size (median line and
+    plotted as a function of subject/pattern size (median lines and
     quartile bands over 10 timings). For $N=2$ the subject is \code{aa}
     and the pattern is shown in the facet title. Such slow timings
     only result from pathological subject/pattern combinations.}

@@ -4,12 +4,8 @@
 ### code chunk number 1: subject
 ###################################################
 
-chr.pos.subject <- c(
-  "chr10:213,054,000-213,055,000",
-  "chrM:111,000",
-  "this will not match",
-  NA, # neither will this.
-  "chr1:110-111 chr2:220-222") # two possible matches.
+chr.pos.subject <- c("chr10:213,054,000-213,055,000", "chrM:111,000", 
+  "this will not match", NA, "chr1:110-111 chr2:220-222") 
 
 
 
@@ -41,14 +37,11 @@ chr.pos.pattern <- paste0(
 ### code chunk number 4: chrPosNoTypes
 ###################################################
 
-int.from.digits <- function(captured.text){
-  as.integer(gsub("[^0-9]", "", captured.text))
-}
-conversion.list <- list(
-  chromStart=int.from.digits,
-  chromEnd=int.from.digits)
-(match.df <- namedCapture::str_match_named(
-  chr.pos.subject, chr.pos.pattern, conversion.list))
+int.from.digits <- function(captured.text)as.integer(gsub("[^0-9]", "", captured.text))
+conversion.list <- list(chromStart=int.from.digits, chromEnd=int.from.digits)
+match.df <- namedCapture::str_match_named(
+  chr.pos.subject, chr.pos.pattern, conversion.list)
+str(match.df)
 
 
 
@@ -65,10 +58,8 @@ namedCapture::str_match_all_named(
 ### code chunk number 6: namedSubject
 ###################################################
 
-named.subject <- c(
-  ten="chr10:213,054,000-213,055,000",
-  M="chrM:111,000",
-  two="chr1:110-111 chr2:220-222") # two possible matches.
+named.subject <- c(ten="chr10:213,054,000-213,055,000", 
+  M="chrM:111,000", two="chr1:110-111 chr2:220-222")
 namedCapture::str_match_named(
   named.subject, chr.pos.pattern, conversion.list)
 namedCapture::str_match_all_named(
