@@ -13,6 +13,15 @@ Abstract: Regular expressions are powerful tools for manipulating
 
 Article [[file:RJwrapper.pdf]] submitted for review at R Journal.
 
+** 6 Mar 2019
+
+R-core member Tomas Kalibera has updated R so that it will use linear
+time algorithms for both substring and gregexpr, starting with R-3.6.0.
+- substring [[https://github.com/wch/r-source/commit/4931902af83938a21f4d3f8fa0fce81ad062f2c1]] 
+- gregexpr https://github.com/wch/r-source/commit/98d247645ba95270bd14790284500a699caebf52
+
+[[file:figure-timings-all-email.png]]
+
 ** 27 Feb 2019
 - Some minor fixes, move Figure with C libraries to beginning.
 - main file to edit is now [[file:hocking.Rnw]] and Makefile takes care of

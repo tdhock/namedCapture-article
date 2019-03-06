@@ -1,3 +1,5 @@
+(out.rds <- commandArgs(trailingOnly=TRUE))
+
 options(repos="http://cloud.r-project.org")
 ### Write down what package versions work with your R code, and
 ### attempt to download and load those packages. The first argument is
@@ -11,7 +13,10 @@ options(repos="http://cloud.r-project.org")
 ### e.g. "tdhock/animint@f877163cd181f390de3ef9a38bb8bdd0396d08a4" and
 ### we use install_github to get it, if necessary.
 works_with_R <- function(Rvers,...){
-  local.lib <- file.path(getwd(), "library")
+  local.lib <- file.path(
+    getwd(), paste0(
+      "library-",
+      paste(R.version[c("major", "minor")], collapse=".")))
   old.path.vec <- .libPaths()
   if(! local.lib %in% old.path.vec){
     dir.create(local.lib, showWarnings=FALSE, recursive=TRUE)
@@ -167,4 +172,4 @@ if(FALSE){
   directlabels::direct.label(gg, "last.polygons")
 }
 
-saveRDS(timing.dt, "trackDb.rds")
+saveRDS(timing.dt, out.rds)

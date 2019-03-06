@@ -1298,40 +1298,47 @@ In this section we compare the computation time of the proposed
 \CRANpkg{namedCapture} package with other R packages. For all of the
 comparisons, we used the \CRANpkg{microbenchmark} package to compute
 the computation times of each R package/function. We study how the
-empirical computation time scales as a function of subject size. The
+empirical computation time scales as a function of subject/pattern size. The
 first three comparisons come from the real-world examples discussed
 earlier in this article; the last two comparisons are pathological examples
 used to show worst case time complexity.
 
 The first example involves extracting all matches from a multi-line
 text file, as discussed in Section~``\sectiontrackDb.''
-Figure~\ref{fig:timings-examples} (left) shows comparisons with
-packages \CRANpkg{re2r}, \CRANpkg{stringr}, \CRANpkg{stringi},
+Figure~\ref{fig:timings-all} shows comparisons with packages
+\CRANpkg{re2r}, \CRANpkg{stringr}, \CRANpkg{stringi},
 \CRANpkg{rematch2}, \CRANpkg{rex}. We expected small differences
-between the packages, on the order of constant factors. Surprisingly,
-the lines for the \CRANpkg{rex} and \CRANpkg{rematch2} packages have
-larger slopes than the other algorithms, which suggests quadratic
-rather than the expected linear time complexity. This can be explained
-because these packages use the base \code{gregexpr} and
-\code{substring} functions, which are implemented using inefficient
-quadratic time algorithms in R-3.5.2 (a bug report was posted on
-R-devel as a result of this investigation, and a fix should appear in
-a future version of R). \CRANpkg{namedCapture} shows timings which are
-linear in the number of lines in the text file, similar to packages
-\CRANpkg{stringr}, \CRANpkg{stringi}, and \CRANpkg{re2r}.
-
+between the packages, on the order of constant factors. Using R-3.5.2
+(left panel of Figure~\ref{fig:timings-all}), the lines for the
+\CRANpkg{rex} and \CRANpkg{rematch2} packages have larger slopes than
+the other packages
+(\CRANpkg{namedCapture}, \CRANpkg{stringr}, \CRANpkg{stringi}, and \CRANpkg{re2r}). This can be explained because \CRANpkg{rex} and \CRANpkg{rematch2} use the base \code{gregexpr} and \code{substring} functions,
+which are implemented using inefficient quadratic time algorithms in
+R-3.5.2. As a result of this research, this issue was reported on
+R-devel, and R-core member Tomas Kalibera has fixed the problem. In R-3.6.0 (right panel of Figure~\ref{fig:timings-all}), linear time algorithms are used. 
 
 \begin{figure}
-  \includegraphics[width=\textwidth]{figure-timings-examples}
+  \includegraphics[width=\textwidth]{figure-timings-all}
   \vskip -0.5cm
-  \caption{\label{fig:timings-examples} Computation time is plotted as
+  \caption{\label{fig:timings-all} Computation time for finding
+    all matches in a text file is plotted as a function of number of lines (median line and quartile bands over 5 timings). Such timings
+    are typical of real-world subjects/patterns. R-3.5.2 used
+    quadratic time algorithms for \code{gregexpr}/\code{substring}
+    (left), which were changed to linear time algorithms in R-3.6.0
+    due to this research (right).}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{figure-timings-first}
+  \vskip -0.5cm
+  \caption{\label{fig:timings-first} Computation time for finding the first match is plotted as
     a function of subject size (median line and quartile bands over 5
-    timings). Such timings are typical for real-world subjects and patterns such as the three examples shown. }
+    timings). Such timings are typical for real-world subjects and patterns such as the two examples shown. }
 \end{figure}
 
 The second example involves extracting the first match from each line
 of a log file, as discussed in Section~``\sectionrex.''
-Figure~\ref{fig:timings-examples} (middle) shows comparisons with the
+Figure~\ref{fig:timings-first} (left) shows comparisons with the
 previously discussed packages and \code{utils:strcapture}. We expected
 small differences between the packages, on the order of constant
 factors. In this comparison we observed only small constant factor
@@ -1339,7 +1346,7 @@ differences, and linear time complexity for all packages.
 
 The third example involves using a different regular expression to
 extract data for each of two columns of a data frame, as discussed in
-Section~``\sectiontidyr.'' Figure~\ref{fig:timings-examples} (right)
+Section~``\sectiontidyr.'' Figure~\ref{fig:timings-first} (right)
 shows a comparison with \CRANpkg{tidyr}. Again we expected small
 differences between the packages, and we observed linear time
 complexity for both \CRANpkg{tidyr} and \CRANpkg{namedCapture}.
@@ -1370,30 +1377,19 @@ limit PCRE imposes on backtracking. Overall this comparison suggests
 that for guaranteed fast matching, RE2 must be used, via the \CRANpkg{re2r} or
 \CRANpkg{namedCapture} packages. 
 
-\begin{figure}
-  \includegraphics[width=\textwidth]{figure-timings-pathological}
-  \vskip -0.5cm
-  \caption{\label{fig:timings-pathological} Computation time is
-    plotted as a function of subject/pattern size (median line and
-    quartile bands over 10 timings). For $N=2$ the subject is \code{aa}
-    and the pattern is shown in the facet title. Such slow timings
-    only result from pathological subject/pattern combinations.}
-\end{figure}
-
 \section{Discussion and conclusions}
 
-Our comparisons showed how similar operations can be performed by \CRANpkg{namedCapture} and
-other R packages (e.g. \CRANpkg{tidyr} and \CRANpkg{rex}). Our
-empirical timings highlight the relative advantages and disadvantages
-of the different R packages we tested. For example, we observed that
-\CRANpkg{rex} and \CRANpkg{rematch2} are relatively slow for finding
-all matches in large multi-line text files, because they use the base
-\code{gregexpr}/\code{substring} functions (which use inefficient
-quadratic time algorithms in R-3.5.2 but hopefully will be linear time
-in a future version of R). In contrast, \CRANpkg{namedCapture} showed
-relatively fast empirical timings, which were within a constant factor
-of other packages (\CRANpkg{stringi}, \CRANpkg{stringr},
-\CRANpkg{re2r}). 
+Our comparisons showed how similar operations can be performed by
+\CRANpkg{namedCapture} and other R packages (e.g. \CRANpkg{tidyr} and
+\CRANpkg{rex}). Our empirical timings revealed an inefficient
+implementation of the \code{substring}/\code{gregexpr} functions in
+R-3.5.2, which was fixed in R-3.6.0 as a result of this
+research. After applying that fix, all packages were asymptotically
+linear in our empirical comparisons of time to compute matches using
+typical/real-world patterns and subjects. Finally, we studied the
+worst-case time complexity of matching on pathological
+patterns/subjects, and showed that RE2 must be used for guaranteed
+linear time complexity.
 
 The article presented the \CRANpkg{namedCapture} package, along with
 detailed comparisons with other R packages for regular expressions.  A
@@ -1409,6 +1405,16 @@ otherwise RE2 should be preferred for guaranteed linear time
 complexity.
 Overall we hope that the unique features of the \CRANpkg{namedCapture}
 package will be useful and inspiring for other package developers.  
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{figure-timings-pathological}
+  \vskip -0.5cm
+  \caption{\label{fig:timings-pathological} Computation time is
+    plotted as a function of subject/pattern size (median line and
+    quartile bands over 10 timings). For $N=2$ the subject is \code{aa}
+    and the pattern is shown in the facet title. Such slow timings
+    only result from pathological subject/pattern combinations.}
+\end{figure}
 
 
 \paragraph{Reproducible research statement.} The source code for this

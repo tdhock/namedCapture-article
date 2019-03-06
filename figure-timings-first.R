@@ -2,12 +2,8 @@ library(data.table)
 library(ggplot2)
 timing.dt.list <- list()
 titles <- c(
-  log="First match
-character vector",
-  sacct="First match
-two data.frame columns",
-  trackDb="All matches
-multi-line text file")
+  log="Character vector",
+  sacct="Two data.frame columns")
 pkg.colors <- c(
   namedCapture="#E41A1C",#red
   tidyr="#377EB8",#blue
@@ -19,7 +15,7 @@ pkg.colors <- c(
   stringi="#A65628",#brown
   re2r="#F781BF",#pink
   stringr="#999999")#grey
-for(task in c("log", "sacct", "trackDb")){
+for(task in names(titles)){
   timing.rds <- paste0(task, ".rds")
   if(file.exists(timing.rds)){
     dt <- readRDS(timing.rds)
@@ -45,16 +41,17 @@ gg.legend <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
   facet_grid(. ~ title)+
-  scale_y_log10("seconds")+
+  scale_y_log10("Time to compute first match
+in each subject (seconds)")+
   scale_color_manual(values=pkg.colors)+
   scale_fill_manual(values=pkg.colors)+
   coord_cartesian(
-    xlim=c(1e2, 1e8),
-    ylim=c(1e-4, 1e3),
+    xlim=c(10^1.8, 10^6.5),
+    ylim=c(1e-3, 1e1),
     expand=FALSE)+
   scale_x_log10(
-    "subject size",
-    breaks=c(1e3, 1e5))+
+    "Number of subjects",
+    breaks=10^(2:5))+
   geom_ribbon(aes(
     subject.size, ymin=q25, ymax=q75, fill=expr.chr.pkg, group=expr),
     data=stats.dt,
@@ -75,6 +72,6 @@ gg.legend <- ggplot()+
   ##   method=list(cex=0.45, "last.polygons"),
   ##   data=stats.dt)+
   guides(color="none",fill="none")
-pdf("figure-timings-examples.pdf", 6, 2.5)
+pdf("figure-timings-first.pdf", 6, 2.5)
 print(gg.legend)
 dev.off()
