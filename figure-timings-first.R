@@ -1,7 +1,7 @@
 library(data.table)
 library(ggplot2)
 timing.dt.list <- list()
-titles <- c(
+Subjects <- c(
   log="Character vector",
   sacct="Two data.frame columns")
 pkg.colors <- c(
@@ -15,13 +15,13 @@ pkg.colors <- c(
   stringi="#A65628",#brown
   re2r="#F781BF",#pink
   stringr="#999999")#grey
-for(task in names(titles)){
+for(task in names(Subjects)){
   timing.rds <- paste0(task, ".rds")
   if(file.exists(timing.rds)){
     dt <- readRDS(timing.rds)
     dt[, seconds := NULL]
     timing.dt.list[[task]] <- data.table(
-      task, title=titles[[task]], dt)
+      task, Subject=Subjects[[task]], dt)
   }
 }
 timing.dt <- do.call(rbind, timing.dt.list)
@@ -36,11 +36,11 @@ stats.dt <- t2[, list(
   median=median(seconds),
   q25=quantile(seconds, 0.25),
   q75=quantile(seconds, 0.75)
-  ), by=list(task, title, expr.chr.pkg, subject.size, expr)]
+  ), by=list(task, Subject, expr.chr.pkg, subject.size, expr)]
 gg.legend <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
-  facet_grid(. ~ title)+
+  facet_grid(. ~ Subject, labeller=label_both)+
   scale_y_log10("Time to compute first match
 in each subject (seconds)")+
   scale_color_manual(values=pkg.colors)+

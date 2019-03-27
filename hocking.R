@@ -382,12 +382,8 @@ tidyr::extract(
 ### code chunk number 29: tidyr.task
 ###################################################
 
-tidyr.task.pattern <- paste0(
-  "_(?:([0-9]+)|",
-  tidyr.range.pattern, 
-  ")")
-tidyr::extract(
-  sacct.df, "JobID", c("task", "task1", "taskN"), 
+tidyr.task.pattern <- paste0("_(?:([0-9]+)|", tidyr.range.pattern, ")")
+tidyr::extract(sacct.df, "JobID", c("task", "task1", "taskN"), 
   tidyr.task.pattern, remove=FALSE)
 
 
@@ -396,14 +392,9 @@ tidyr::extract(
 ### code chunk number 30: tidyr.job
 ###################################################
 
-tidyr.job.pattern <- paste0(
-  "([0-9]+)", 
-  tidyr.task.pattern,
-  "(?:[.](.*))?")
-(job.df <- tidyr::extract(
-  sacct.df, "JobID", 
-  c("job", "task", "task1", "taskN", "type"), 
-  tidyr.job.pattern))
+tidyr.job.pattern <- paste0("([0-9]+)", tidyr.task.pattern, "(?:[.](.*))?")
+(job.df <- tidyr::extract(sacct.df, "JobID", 
+  c("job", "task", "task1", "taskN", "type"), tidyr.job.pattern))
 
 
 
@@ -411,10 +402,8 @@ tidyr.job.pattern <- paste0(
 ### code chunk number 31: tidyr2
 ###################################################
 
-tidyr::extract(
-  job.df, "Elapsed", c("hours", "minutes", "seconds"),
-  "([0-9]+):([0-9]+):([0-9]+)",
-  convert=TRUE)
+tidyr::extract(job.df, "Elapsed", c("hours", "minutes", "seconds"),
+  "([0-9]+):([0-9]+):([0-9]+)", convert=TRUE)
 
 
 

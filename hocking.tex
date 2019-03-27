@@ -248,7 +248,7 @@ regular expressions. By default, \CRANpkg{namedCapture} uses the RE2 C
 library if the \CRANpkg{re2r} package is available, and PCRE otherwise
 (via the base \code{regexpr} and \code{gregexpr} functions). RE2 is
 preferred because it is guaranteed to find a match in linear time (see
-Section~\sectiontimings). However, PCRE supports some regex features
+Section~``\sectiontimings''). However, PCRE supports some regex features
 (e.g. backreferences) that RE2 does not. To tell
 \CRANpkg{namedCapture} to use PCRE rather than RE2,
 \code{options(namedCapture.engine="PCRE")} can be specified. For
@@ -1009,7 +1009,7 @@ column, along with the Elapsed column:
 The code above specifies two named arguments to
 \code{df\_match\_variable}. Each named argument specifies a column from
 which tabular data are extracted using the corresponding pattern. The
-final result is a data frame with additional columns for each named
+final result is a data frame with an additional column for each named
 capture group. 
 
 \section{Comparisons with other R packages}
@@ -1190,12 +1190,8 @@ matches either a single task ID, or a range in square brackets:
 
 \begin{Schunk}
 \begin{Sinput}
-> tidyr.task.pattern <- paste0(
-+   "_(?:([0-9]+)|",
-+   tidyr.range.pattern, 
-+   ")")
-> tidyr::extract(
-+   sacct.df, "JobID", c("task", "task1", "taskN"), 
+> tidyr.task.pattern <- paste0("_(?:([0-9]+)|", tidyr.range.pattern, ")")
+> tidyr::extract(sacct.df, "JobID", c("task", "task1", "taskN"), 
 +   tidyr.task.pattern, remove=FALSE)
 \end{Sinput}
 \begin{Soutput}
@@ -1215,14 +1211,9 @@ In the code below we define a pattern that matches the entire job string:
 
 \begin{Schunk}
 \begin{Sinput}
-> tidyr.job.pattern <- paste0(
-+   "([0-9]+)", 
-+   tidyr.task.pattern,
-+   "(?:[.](.*))?")
-> (job.df <- tidyr::extract(
-+   sacct.df, "JobID", 
-+   c("job", "task", "task1", "taskN", "type"), 
-+   tidyr.job.pattern))
+> tidyr.job.pattern <- paste0("([0-9]+)", tidyr.task.pattern, "(?:[.](.*))?")
+> (job.df <- tidyr::extract(sacct.df, "JobID", 
++   c("job", "task", "task1", "taskN", "type"), tidyr.job.pattern))
 \end{Sinput}
 \begin{Soutput}
    Elapsed      job task task1 taskN   type
@@ -1243,10 +1234,8 @@ elapsed time. Note that \code{convert=TRUE} means to use
 
 \begin{Schunk}
 \begin{Sinput}
-> tidyr::extract(
-+   job.df, "Elapsed", c("hours", "minutes", "seconds"),
-+   "([0-9]+):([0-9]+):([0-9]+)",
-+   convert=TRUE)
+> tidyr::extract(job.df, "Elapsed", c("hours", "minutes", "seconds"),
++   "([0-9]+):([0-9]+):([0-9]+)", convert=TRUE)
 \end{Sinput}
 \begin{Soutput}
   hours minutes seconds      job task task1 taskN   type
@@ -1308,7 +1297,7 @@ the other packages
 (\CRANpkg{namedCapture}, \CRANpkg{stringr}, \CRANpkg{stringi}, and \CRANpkg{re2r}). This can be explained because \CRANpkg{rex} and \CRANpkg{rematch2} use the base \code{gregexpr} and \code{substring} functions,
 which are implemented using inefficient quadratic time algorithms in
 R-3.5.2. As a result of this research, this issue was reported on
-R-devel, and R-core member Tomas Kalibera has fixed the problem. In R-3.6.0 (right panel of Figure~\ref{fig:timings-all}), linear time algorithms are used. 
+the R-devel email list, and R-core member Tomas Kalibera has fixed the problem. In R-3.6.0 (right panel of Figure~\ref{fig:timings-all}), linear time algorithms are used. 
 
 \begin{figure}
   \includegraphics[width=\textwidth]{figure-timings-all}
@@ -1319,14 +1308,6 @@ R-devel, and R-core member Tomas Kalibera has fixed the problem. In R-3.6.0 (rig
     quadratic time algorithms for \code{gregexpr}/\code{substring}
     (left), which were changed to linear time algorithms in R-3.6.0
     due to this research (right).}
-\end{figure}
-
-\begin{figure}
-  \includegraphics[width=\textwidth]{figure-timings-first}
-  \vskip -0.5cm
-  \caption{\label{fig:timings-first} Computation time for finding the first match is plotted as
-    a function of subject size (median lines and quartile bands over 5
-    timings). Such timings are typical for real-world subjects and patterns such as the two examples shown. }
 \end{figure}
 
 The second example involves extracting the first match from each line
@@ -1357,6 +1338,14 @@ should be considered along with other features
 example, guaranteed linear time complexity is essential for avoiding
 denial-of-service attacks in situations where potentially malicious
 users are permitted to define the regular expression pattern.
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{figure-timings-first}
+  \vskip -0.5cm
+  \caption{\label{fig:timings-first} Computation time for finding the first match is plotted as
+    a function of subject size (median lines and quartile bands over 5
+    timings). Such timings are typical for real-world subjects and patterns such as the two examples shown. }
+\end{figure}
 
 The final example involves using a pathological regular expression of
 increasing size (without backreferences) on a subject of increasing
@@ -1399,17 +1388,6 @@ complexity.
 Overall we hope that the unique features of the \CRANpkg{namedCapture}
 package will be useful and inspiring for other package developers.  
 
-\begin{figure}
-  \includegraphics[width=\textwidth]{figure-timings-pathological}
-  \vskip -0.5cm
-  \caption{\label{fig:timings-pathological} Computation time is
-    plotted as a function of subject/pattern size (median lines and
-    quartile bands over 10 timings). For $N=2$ the subject is \code{aa}
-    and the pattern is shown in the facet title. Such slow timings
-    only result from pathological subject/pattern combinations.}
-\end{figure}
-
-
 \paragraph{Reproducible research statement.} The source code for this
 article can be freely downloaded from
 \url{https://github.com/tdhock/namedCapture-article}
@@ -1422,3 +1400,15 @@ article can be freely downloaded from
   Flagstaff, Arizona\\
   USA\\
   \email{toby.hocking@nau.edu}}
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{figure-timings-pathological}
+  \vskip -0.5cm
+  \caption{\label{fig:timings-pathological} Computation time is
+    plotted as a function of subject/pattern size (median lines and
+    quartile bands over 10 timings). For $N=2$ the subject is \code{aa}
+    and the pattern is shown in the facet title. Such slow timings
+    only result from pathological subject/pattern combinations.}
+\end{figure}
+
+
