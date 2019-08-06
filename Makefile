@@ -1,10 +1,13 @@
 submission.zip: RJwrapper.pdf
-	cp figure-timings-*.R figure-timings-*.pdf hocking.bib hocking.R hocking.tex letter-to-editor.pdf log.R log.rds Makefile pathological-backref.R pathological-backref.rds pathological.R pathological.rds RJwrapper.pdf RJwrapper.tex sacct.R sacct.rds trackDb.R trackDb.rds submission
+	cp figure-timings-*.R figure-timings-*.pdf hocking.bib hocking.R hocking-edited.tex letter-to-editor.pdf log.R log.rds Makefile pathological-backref.R pathological-backref.rds pathological.R pathological.rds RJwrapper.pdf RJwrapper.tex sacct.R sacct.rds trackDb.R trackDb.rds submission
 	zip submission submission/* 
-RJwrapper.pdf: hocking.tex hocking.bib figure-timings-first.pdf figure-timings-all.pdf figure-timings-pathological.pdf
+RJwrapper.pdf: hocking-edited.tex hocking.bib figure-timings-first.pdf figure-timings-all.pdf figure-timings-pathological.pdf
 	R -e 'tools::texi2pdf("RJwrapper.tex")'
-hocking.tex: hocking.Rnw
+hocking-edited.Rnw: hocking-remove-space.R hocking.Rnw 
+	R --vanilla < $<
+hocking-edited.tex: hocking-edited.Rnw
 	R CMD Stangle $<
+	#R -e 'knitr::knit("hocking-edited.Rnw")'
 	R CMD Sweave $<
 HOCKING-namedCapture.pdf: HOCKING-namedCapture.Rnw RJreferences.bib pathological.rds log.rds trackDb.rds sacct.rds figure-timings-first.pdf figure-timings-all.pdf figure-timings-pathological.pdf
 	rm -f *.aux *.bbl

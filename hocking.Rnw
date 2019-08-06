@@ -363,7 +363,7 @@ the matched column/group), and return a vector of the same size. The
 code below specifies the \code{int.from.digits} function for both chromStart
 and chromEnd:
 
-<<chrPosNoTypes>>=
+<<intFromDigits>>=
 
 int.from.digits <- function(captured.text)as.integer(gsub("[^0-9]", "", captured.text))
 conversion.list <- list(chromStart=int.from.digits, chromEnd=int.from.digits)
@@ -573,7 +573,8 @@ Some representative lines from that file are shown below.
 
 <<catTrackDB>>=
 
-cat(trackDb.lines[78:107], sep="\n")
+show.width <- 55
+substr(trackDb.lines[78:107], 1, show.width)
 
 @
 
@@ -589,7 +590,7 @@ fields.mat <- namedCapture::str_match_all_variable(
   name="\\S+",
   fields="(?:\n[^\n]+)*",
   "\n")
-head(substr(fields.mat, 1, 50))
+head(substr(fields.mat, 1, show.width))
 
 @
 
@@ -617,7 +618,7 @@ fields.list <- namedCapture::str_match_all_named(
     "(?P<name>.*?)",
     " ",
     "(?P<value>[^\n]+)"))
-fields.list$bcell_McGill0091Coverage
+substr(fields.list$bcell_McGill0091Coverage, 1, show.width)
 
 @
 
@@ -726,11 +727,13 @@ namedCapture::df_match_variable(sacct.df, JobID=task.pattern)
 
 @ 
 
-Finally, we use the previously defined patterns to match the complete JobID
-column, along with the Elapsed column:
+Below, we use the previously defined patterns to match the complete
+JobID column, along with the Elapsed column. Each column can be
+processed in parallel by declaring a future plan:
 
 <<dfMatchVar>>=
 
+future::plan("multiprocess")
 namedCapture::df_match_variable(
   sacct.df,
   JobID=list(
@@ -769,8 +772,8 @@ parsing example from the \CRANpkg{rex} package:
 
 <<logsubject>>=
 
-log.subject <- 'gate3.fmr.com - - [05/Jul/1995:13:51:39 -0400] "GET /shuttle/countdown/ 
-curly02.slip.yorku.ca - - [10/Jul/1995:23:11:49 -0400] "GET /sts-70/sts-70-patch-small.gif
+log.subject <- 'gate3.fmr.com - - [05/Jul/1995:13:51:39 -0400] "GET /shuttle/ 
+curly02.slip.yorku.ca - - [10/Jul/1995:23:11:49 -0400] "GET /sts-70/sts-small.gif
 boson.epita.fr - - [15/Jul/1995:11:27:49 -0400] "GET /movies/sts-71-mir-dock.MPG
 134.153.50.9 - - [13/Jul/1995:11:02:50 -0400] "GET /icons/text.xbm'
 log.lines <- strsplit(log.subject, split="\n")[[1]]
@@ -993,7 +996,8 @@ extract data for each of two columns of a data frame, as discussed in
 Section~``\sectiontidyr.'' Figure~\ref{fig:timings-first} (right)
 shows a comparison with \CRANpkg{tidyr}. Again we expected small
 differences between the packages, and we observed linear time
-complexity for both \CRANpkg{namedCapture} and \CRANpkg{tidyr}.
+complexity for both \CRANpkg{tidyr} and \CRANpkg{namedCapture} (using
+either PCRE or RE2).
 
 The fourth example involves using a pathological regular expression of
 increasing size (with backreferences) on a subject of increasing size.

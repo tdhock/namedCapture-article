@@ -19,27 +19,42 @@ for(task in names(Subjects)){
   timing.rds <- paste0(task, ".rds")
   if(file.exists(timing.rds)){
     dt <- readRDS(timing.rds)
-    dt[, seconds := NULL]
+    if("seconds" %in% names(dt)){
+      dt[, seconds := NULL]
+    }
     timing.dt.list[[task]] <- data.table(
       task, Subject=Subjects[[task]], dt)
   }
 }
 timing.dt <- do.call(rbind, timing.dt.list)
+
 timing.dt[, seconds := time/1e9]
 timing.dt[, expr.chr := paste(expr)]
 t2 <- namedCapture::df_match_variable(
  timing.dt, expr.chr=list(
    pkg=".*?",
    "::",
-   fun=".*"))
+   fun="[^(]*",
+   list(
+     "\\(",
+     param="[^(]+", 
+     "\\)"
+   ), "?"))
+
 stats.dt <- t2[, list(
   median=median(seconds),
   q25=quantile(seconds, 0.25),
   q75=quantile(seconds, 0.75)
-  ), by=list(task, Subject, expr.chr.pkg, subject.size, expr)]
+), by=list(task, Subject, pkg=expr.chr.pkg, param=expr.chr.param, subject.size, expr)]
+stats.dt[, label := ifelse(grepl("utils", expr), paste(expr), ifelse(
+  grepl("^base", expr), 
+  sub("FALSE", "F", sub("TRUE", "T", sub("^base::", "", expr))),
+  sub("::.*", "", expr)))]
+stats.dt[, label.param := ifelse(
+  param=="", label, paste0(label, "\n", param))]
 gg.legend <- ggplot()+
   theme_bw()+
-  theme(panel.margin=grid::unit(0, "lines"))+
+  theme(panel.spacing=grid::unit(0, "lines"))+
   facet_grid(. ~ Subject, labeller=label_both)+
   scale_y_log10("Time to compute first match
 in each subject (seconds)")+
@@ -53,18 +68,15 @@ in each subject (seconds)")+
     "Number of subjects",
     breaks=10^(2:5))+
   geom_ribbon(aes(
-    subject.size, ymin=q25, ymax=q75, fill=expr.chr.pkg, group=expr),
+    subject.size, ymin=q25, ymax=q75, fill=pkg, group=label.param),
     data=stats.dt,
     alpha=0.5)+
   geom_line(aes(
-    subject.size, median, color=expr.chr.pkg, group=expr),
+    subject.size, median, color=pkg, group=label.param),
     data=stats.dt)+
   directlabels::geom_dl(aes(
-    subject.size, median, color=expr.chr.pkg, 
-    label=ifelse(grepl("utils", expr), paste(expr), ifelse(
-      grepl("^base", expr), 
-      sub("FALSE", "F", sub("TRUE", "T", sub("^base::", "", expr))),
-      sub("::.*", "", expr)))),
+    subject.size, median, color=pkg, 
+    label=label.param),
     method=list(cex=0.65, "last.polygons"),
     data=stats.dt)+
   ## directlabels::geom_dl(aes(
