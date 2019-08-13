@@ -728,8 +728,7 @@ namedCapture::df_match_variable(sacct.df, JobID=task.pattern)
 @ 
 
 Below, we use the previously defined patterns to match the complete
-JobID column, along with the Elapsed column. Each column can be
-processed in parallel by declaring a future plan:
+JobID column, along with the Elapsed column:
 
 <<dfMatchVar>>=
 
