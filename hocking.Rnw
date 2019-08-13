@@ -1,4 +1,4 @@
-\newcommand{\sectiontidyr}{Comparing \code{namedCapture::df\_match\_variable} with \code{tidyr::extract}}
+\newcommand{\sectiontidyr}{Comparing \code{namedCapture::df\_match\_variable} with other functions for data.frames}
 \newcommand{\sectiontrackDb}{Extract all matches from a multi-line text file via \code{str\_match\_all\_variable}}
 \newcommand{\sectiontimings}{Comparing computation times of R regex packages}
 \newcommand{\sectiondf}{\code{df\_match\_variable} extracts new columns from character columns in a data.frame}
@@ -143,9 +143,10 @@ and TRE is used with \code{perl=FALSE}.
  
 The \CRANpkg{rematch2} package provides the \code{re\_match} function which
 extracts the first match using the base \code{regexpr} function
-\citep{rematch2}. It also provides the \code{re\_match\_all} function
-which extracts all matches using the base \code{gregexpr} function. In
-both cases the output is a tibble (a data.frame subclass) with one row
+\citep{rematch2}. It also provides \code{bind\_re\_match} 
+for matching data.frame columns, and \code{re\_match\_all} 
+which extracts all matches using the base \code{gregexpr} function. 
+All functions output a tibble (a data.frame subclass) with one row
 for each subject (for all matches a list column is used). PCRE is used
 with \code{perl=TRUE} and TRE is used with \code{perl=FALSE}. Although
 TRE supports capture groups (and can be used via the base R \code{regexec}
@@ -207,7 +208,7 @@ Package      & First match              & All matches             & C library  \
 \hline
  \pkg{base}         & \code{regexpr}                  & \code{gregexpr}                & PCRE/TRE \\
   \pkg{utils}        & \code{strcapture}               & NA                      & PCRE/TRE \\
-  \CRANpkg{rematch2}     & \code{re\_match}                 & \code{re\_match\_all}            & PCRE/TRE\\
+  \CRANpkg{rematch2}     & \code{re\_match}, \code{bind\_re\_match}   & \code{re\_match\_all}            & PCRE/TRE\\
   \CRANpkg{namedCapture} & \code{str\_match\_*}, \code{df\_match\_variable}          & \code{str\_match\_all\_*}     & PCRE/RE2\\
   \CRANpkg{rex}          & \code{re\_matches(global=FALSE)} & \code{re\_matches(global=TRUE)} & PCRE\\
   \CRANpkg{stringr}      & \code{str\_match}                & \code{str\_match\_all}           & ICU\\
@@ -227,15 +228,15 @@ Package/function & subject & pattern      & outputs     & named & types \\
 \hline
 \pkg{base} & chr     & chr          & mat/list    & yes   & no    \\
 \code{utils::strcapture} & chr     & chr          & df          & no    & some  \\
-\CRANpkg{rematch2} & chr     & chr          & tibble      & yes   & no    \\
-\CRANpkg{namedCapture} & chr/df   & verbose      & mat/list/df       & yes   & any   \\
+\CRANpkg{rematch2} & chr/df     & chr          & tibble      & yes   & no    \\
+\CRANpkg{namedCapture} & chr/df   & chr/verbose      & mat/list/df       & yes   & any   \\
 \CRANpkg{rex} & chr     & verbose      & df/list          & yes   & no    \\
 \CRANpkg{stringr} & chr     & chr          & mat/list    & no    & no    \\
 \CRANpkg{stringi} & chr     & chr          & mat/list    & no    & no    \\
 \code{tidyr::extract} & df   & chr          & df       & no    & some  \\
 \CRANpkg{re2r} & chr     & chr/compiled & df/list     & yes   & no    
 \end{tabular}
-\caption{R packages provide different options for subject/pattern input, extracted text outputs, named capture groups, and type conversion. Abbreviations: chr=character vector, df=data.frame, mat=character matrix. }
+\caption{R packages provide different options for subject/pattern input, extracted text outputs, named capture groups, and type conversion. Abbreviations: chr=character vector, df=data.frame, mat=character matrix, verbose=regex defined in R code which is translated to a character string, compiled=regex string may be compiled and saved to an R object for later use.}
   \label{tab:features}
 \end{table}
 
@@ -871,7 +872,7 @@ thus user-friendly syntax. However there are two major differences:
 \subsection{\sectiontidyr}
 \label{sec:tidyr}
 
-The \CRANpkg{tidyr} package provides functionality similar to
+The \CRANpkg{tidyr} and \CRANpkg{rematch2} packages provide functionality similar to
 \code{namedCapture::df\_match\_variable}, which was introduced in
 Section~``\sectiondf.'' Below we show how
 \code{tidyr::extract} can be used to compute a similar result as in
@@ -922,27 +923,91 @@ tidyr::extract(job.df, "Elapsed", c("hours", "minutes", "seconds"),
 
 @
 
-Overall \code{tidyr::extract} functions
-similarly to
+Below we show the same computation using
+\code{rematch2::bind\_re\_match}, which supports named capture. Note
+that we use \code{paste0} to define a regular expression with each
+named capture group on a separate line:
+
+<<bind>>=
+
+rematch2.range.pattern <- paste0(
+  "\\[",
+  "(?P<task1>[0-9]+)",
+  "(?:-",
+  "(?P<taskN>[0-9]+)",
+  ")?\\]")
+rematch2::bind_re_match(sacct.df, JobID, rematch2.range.pattern)
+
+@ 
+
+Above we extract a range of task IDs in square brackets, and below we
+optionally match a single task ID:
+
+<<bindtask>>=
+
+rematch2.task.pattern <- paste0(
+  "_(?:",
+  "(?P<task>[0-9]+)",
+  "|", rematch2.range.pattern, ")")
+rematch2::bind_re_match(sacct.df, JobID, rematch2.task.pattern)
+
+@ 
+
+Below we additionally match the job ID and job type:
+
+<<bindjob>>=
+
+rematch2.job.pattern <- paste0(
+  "(?P<job>[0-9]+)", 
+  rematch2.task.pattern, 
+  "(?:[.]",
+  "(?P<type>.*)",
+  ")?")
+(rematch2.job.df <- rematch2::bind_re_match(
+  sacct.df, JobID, rematch2.job.pattern))
+
+@ 
+
+Finally we call the function on the result from above with a new
+pattern for another column:
+
+<<bindall>>=
+
+transform(rematch2::bind_re_match(
+  rematch2.job.df, Elapsed, 
+  "(?P<hours>[0-9]+):(?P<minutes>[0-9]+):(?P<seconds>[0-9]+)"),
+  hours.int=as.integer(hours),
+  minutes.int=as.integer(minutes),
+  seconds.int=as.integer(seconds))
+
+@ 
+
+Overall our comparison demonstrates that \code{tidyr::extract} and
+\code{rematch2::bind\_re\_match} function similarly to
 \code{namedCapture::df\_match\_variable}, with the following
 differences:
 \begin{itemize}
 \item Because \code{tidyr::extract} uses the ICU C library, which does
   not support named capture regular expressions, it requires
-  specifying the group names in a separate argument. In contrast, the
-  \CRANpkg{namedCapture} variable argument syntax supports specifying
-  capture group names via R argument names on the same line as the
-  corresponding sub-pattern.
-\item Whereas \code{tidyr::extract(convert=TRUE)} always uses
-  \code{utils::type.convert} for type conversion,
+  specifying the group names in a separate argument. In contrast,
+  \CRANpkg{rematch2} supports specifying capture group names in regex
+  string literals; \CRANpkg{namedCapture} variable argument syntax
+  supports specifying capture group names as R argument names on the
+  same line as the corresponding sub-pattern.
+\item Since \code{rematch2::bind\_re\_match} returns character
+  columns, conversion to numeric types must be accomplished in a
+  post-processing step using a function such as \code{transform}.
+  In contrast \code{tidyr::extract(convert=TRUE)} always uses
+  \code{utils::type.convert} for type conversion, and
   \code{namedCapture::df\_match\_variable} supports arbitrary
   group-specific type conversion functions, which are specified on the
   same line as the corresponding name/pattern.
-\item Because one call to \code{tidyr::extract} extracts data from one
-  column in the subject data frame, it must be called twice (once for
-  the Elapsed column, once for the JobID column). In contrast, one
-  call to \code{namedCapture::df\_match\_variable} can be used to
-  extract data from multiple columns in the subject data frame. 
+\item Because \code{tidyr::extract} and
+  \code{rematch2::bind\_re\_match} operate on one column in the
+  subject data frame, they must be called twice (once for the Elapsed
+  column, once for the JobID column). In contrast, one call to
+  \code{namedCapture::df\_match\_variable} can be used to extract data
+  from multiple columns in the subject data frame.
 \end{itemize}
 
 \subsection{\sectiontimings}
@@ -993,9 +1058,9 @@ differences, and linear time complexity for all packages.
 The third example involves using a different regular expression to
 extract data for each of two columns of a data frame, as discussed in
 Section~``\sectiontidyr.'' Figure~\ref{fig:timings-first} (right)
-shows a comparison with \CRANpkg{tidyr}. Again we expected small
+shows a comparison with \CRANpkg{tidyr} and \CRANpkg{rematch2}. Again we expected small
 differences between the packages, and we observed linear time
-complexity for both \CRANpkg{tidyr} and \CRANpkg{namedCapture} (using
+complexity for \CRANpkg{tidyr}, \CRANpkg{rematch2}, and \CRANpkg{namedCapture} (using
 either PCRE or RE2).
 
 The fourth example involves using a pathological regular expression of
@@ -1065,14 +1130,6 @@ package will be useful and inspiring for other package developers.
 article can be freely downloaded from
 \url{https://github.com/tdhock/namedCapture-article}
 
-\bibliography{hocking}
-
-\address{Toby Dylan Hocking\\
-  School of Informatics, Computing, and Cyber Systems\\
-  Northern Arizona University\\
-  Flagstaff, Arizona\\
-  USA\\
-  \email{toby.hocking@nau.edu}}
 
 \begin{figure}
   \includegraphics[width=\textwidth]{figure-timings-pathological}
@@ -1084,4 +1141,12 @@ article can be freely downloaded from
     only result from pathological subject/pattern combinations.}
 \end{figure}
 
+\bibliography{hocking}
+
+\address{Toby Dylan Hocking\\
+  School of Informatics, Computing, and Cyber Systems\\
+  Northern Arizona University\\
+  Flagstaff, Arizona\\
+  USA\\
+  \email{toby.hocking@nau.edu}}
 

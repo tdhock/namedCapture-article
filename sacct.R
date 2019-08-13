@@ -1,6 +1,7 @@
 library(data.table)
 library(namedCapture)
 library(tidyr)
+library(magrittr)
 
 (sacct.dt <- data.table(
   Elapsed=c("07:04:42", "07:04:42", "07:04:49", "00:00:00", "00:00:00"),
@@ -20,19 +21,20 @@ task.pattern <- list(
     task=int.pattern,
     "|",#either one task(above) or range(below)
     range.pattern))
-job.pattern <- list(
-  job=int.pattern,
-  task.pattern,
-  list(
-    "[.]",
-    type=".*"
-  ), "?")
-elapsed.pattern <- list(
-  hours=int.pattern,
-  ":",
-  minutes=int.pattern,
-  ":",
-  seconds=int.pattern)
+namedCapture.patterns <- list(
+  JobID=list(
+    job=int.pattern,
+    task.pattern,
+    list(
+      "[.]",
+      type=".*"
+    ), "?"),
+  Elapsed=list(
+    hours=int.pattern,
+    ":",
+    minutes=int.pattern,
+    ":",
+    seconds=int.pattern))
 tidyr.range.pattern <- "\\[([0-9]+)(?:-([0-9]+))?\\]"
 tidyr.task.pattern <- paste0(
   "_(?:([0-9]+)|",
@@ -43,6 +45,9 @@ tidyr.job.pattern <- paste0(
   tidyr.task.pattern,
   "(?:[.](.*))?")
 
+rematch2.patterns <- sapply(namedCapture.patterns, function(L){
+  namedCapture::variable_args_list(L)$pattern
+})
 
 ## interesting: for(){big <- cbind(big, small)} is more efficient than do.call(cbind, big.list)!
 
@@ -55,6 +60,7 @@ for(subject.size in 10^seq(2, 5, by=0.5)){
     subject.list[[name]] <- rep(sacct.dt[[name]], l=subject.size)
   }
   subject <- do.call(data.table, subject.list)
+  namedCapture.args <- c(list(subject), namedCapture.patterns)
   timing <- microbenchmark::microbenchmark(
     "tidyr::extract(ICU)"={
       job.df <- tidyr::extract(
@@ -67,49 +73,23 @@ for(subject.size in 10^seq(2, 5, by=0.5)){
         "([0-9]+):([0-9]+):([0-9]+)",
         convert=TRUE)
     },
-    ## "tidyr::extract(JobID)"={
-    ##   job.df <- tidyr::extract(
-    ##     subject, "JobID", 
-    ##     c("job", "task", "task1", "taskN", "type"), 
-    ##     tidyr.job.pattern,
-    ##     convert=TRUE)
-    ## },
-    ## "tidyr::extract(Elapsed)"={
-    ##   tidyr::extract(
-    ##     subject, "Elapsed", c("hours", "minutes", "seconds"),
-    ##     "([0-9]+):([0-9]+):([0-9]+)",
-    ##     convert=TRUE)
-    ## },
-    ## "namedCapture::str_match_variable(JobID)"={
-    ##   job.df <- namedCapture::str_match_variable(
-    ##     subject$JobID, job.pattern)
-    ##   data.table(subject, job.df)
-    ## },
-    ## "namedCapture::str_match_variable(Elapsed)"={
-    ##   el.df <- namedCapture::str_match_variable(
-    ##     subject$Elapsed, elapsed.pattern)
-    ##   data.table(subject, el.df)
-    ## },
-    ## "namedCapture::str_match_variable(str_both)"={
-    ##   el.df <- namedCapture::str_match_variable(
-    ##     subject$Elapsed, elapsed.pattern)
-    ##   job.df <- namedCapture::str_match_variable(
-    ##     subject$JobID, job.pattern)
-    ##   data.table(subject, el.df, job.df)
-    ## },
+    "rematch2::bind_re_match(PCRE)"={
+      ## out.df <- subject
+      ## for(col.name in names(rematch2.patterns)){
+      ##   out.df <- rematch2::bind_re_match_(
+      ##     out.df, col.name, rematch2.patterns[[col.name]])
+      ## }
+      subject %>%
+        rematch2::bind_re_match(JobID, rematch2.patterns[["JobID"]]) %>%
+        rematch2::bind_re_match(Elapsed, rematch2.patterns[["Elapsed"]]) 
+    },
     "namedCapture::df_match_variable(PCRE)"={
       options(namedCapture.engine="PCRE")
-      df_match_variable(
-        subject,
-        JobID=job.pattern,
-        Elapsed=elapsed.pattern)
+      do.call(df_match_variable, namedCapture.args)
     },
     "namedCapture::df_match_variable(RE2)"={
       options(namedCapture.engine="RE2")
-      df_match_variable(
-        subject,
-        JobID=job.pattern,
-        Elapsed=elapsed.pattern)
+      do.call(df_match_variable, namedCapture.args)
     },
     times=5)
   timing.dt.list[[paste(subject.size)]] <- data.table(subject.size, timing)
