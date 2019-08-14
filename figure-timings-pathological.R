@@ -14,6 +14,35 @@ path.stats <- pathological[, list(
   q75=quantile(seconds, 0.75)
   ), by=list(N, expr, facet)]
 library(ggplot2)
+
+lt.dl <- ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(. ~ facet)+
+  scale_y_log10("Time to compute first match (seconds)")+
+  scale_x_log10(
+    "Subject/pattern size N",
+    limits=c(1, 45),
+    breaks=c(1, 5, 10, 15, 20, 25))+
+  geom_ribbon(aes(
+    N, ymin=q25, ymax=q75, group=expr),
+    data=path.stats,
+    alpha=0.5)+
+  geom_line(aes(
+    N, median, linetype=expr, group=expr),
+    data=path.stats)+
+  guides(linetype="none")+
+  directlabels::geom_dl(aes(
+    N, median, label=expr),
+    data=path.stats,
+    method=list(box.color="grey", "last.polygons"))
+pdf("figure-timings-pathological-linetype.pdf", 7, 3)
+print(lt.dl)
+dev.off()
+png("figure-timings-pathological-linetype.png", 7, 3, units="in", res=200)
+print(lt.dl)
+dev.off()
+
 log.legend <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+

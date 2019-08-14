@@ -35,7 +35,42 @@ stats.dt <- t2[, list(
   q25=quantile(seconds, 0.25),
   q75=quantile(seconds, 0.75)
   ), by=list(version, title, expr.chr.pkg, subject.size, expr)]
-gg.legend <- ggplot()+
+dl.linetype <- ggplot()+
+  theme_bw()+
+  theme(panel.margin=grid::unit(0, "lines"))+
+  facet_grid(. ~ title)+
+  scale_y_log10("Time to compute all matches
+in text file (seconds)")+
+  coord_cartesian(
+    xlim=c(10^1.8, 10^6.7),
+    ylim=c(1e-4, 1e3),
+    expand=FALSE)+
+  scale_x_log10(
+    "Number of lines in text file",
+    breaks=10^(2:5))+
+  geom_ribbon(aes(
+    subject.size, ymin=q25, ymax=q75, group=expr),
+    data=stats.dt,
+    alpha=0.5)+
+  geom_line(aes(
+    subject.size, median, linetype=expr.chr.pkg, group=expr),
+    data=stats.dt)+
+  directlabels::geom_dl(aes(
+    subject.size, median, 
+    label=paste0(
+      ifelse(grepl("utils", expr), paste(expr), ifelse(
+        grepl("^base", expr), 
+        sub("FALSE", "F", sub("TRUE", "T", sub("^base::", "", expr))),
+        sub("::.*", "", expr))),
+    " ")),
+    method=list(cex=0.65, box.color="grey", "last.polygons"),
+    data=stats.dt)+
+  guides(color="none",fill="none", linetype="none")
+png("figure-timings-all-linetype.png", 6, 2.5, units="in", res=200)
+print(dl.linetype)
+dev.off()
+
+dl <- ggplot()+
   theme_bw()+
   theme(panel.margin=grid::unit(0, "lines"))+
   facet_grid(. ~ title)+
@@ -65,14 +100,10 @@ in text file (seconds)")+
       sub("::.*", "", expr)))),
     method=list(cex=0.65, "last.polygons"),
     data=stats.dt)+
-  ## directlabels::geom_dl(aes(
-  ##   subject.size, median, color=expr.chr.pkg, label=sub("::", "::\n", expr)),
-  ##   method=list(cex=0.45, "last.polygons"),
-  ##   data=stats.dt)+
   guides(color="none",fill="none")
 png("figure-timings-all-email.png", 6, 2.5, units="in", res=200)
-print(gg.legend)
+print(dl)
 dev.off()
 pdf("figure-timings-all.pdf", 6, 2.5)
-print(gg.legend)
+print(dl)
 dev.off()

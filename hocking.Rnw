@@ -1088,7 +1088,7 @@ R-3.5.2. As a result of this research, this issue was reported on
 the R-devel email list, and R-core member Tomas Kalibera has fixed the problem. In R-3.6.0 (right panel of Figure~\ref{fig:timings-all}), linear time algorithms are used. 
 
 \begin{figure}
-  \includegraphics[width=\textwidth]{figure-timings-all}
+  \includegraphics[width=\textwidth]{figure-timings-all-linetype}
   \vskip -0.5cm
   \caption{\label{fig:timings-all} Computation time for finding
     all matches in a text file is plotted as a function of number of lines (median lines and quartile bands over 5 timings). Such timings
@@ -1136,7 +1136,7 @@ denial-of-service attacks in situations where potentially malicious
 users are permitted to define the regular expression pattern.
 
 \begin{figure}
-  \includegraphics[width=\textwidth]{figure-timings-first}
+  \includegraphics[width=\textwidth]{figure-timings-first-linetype}
   \vskip -0.5cm
   \caption{\label{fig:timings-first} Computation time for finding the first match is plotted as
     a function of subject size (median lines and quartile bands over 5
@@ -1204,7 +1204,7 @@ article can be freely downloaded from
 
 
 \begin{figure}
-  \includegraphics[width=\textwidth]{figure-timings-pathological}
+  \includegraphics[width=\textwidth]{figure-timings-pathological-linetype}
   \vskip -0.5cm
   \caption{\label{fig:timings-pathological} Computation time is
     plotted as a function of subject/pattern size (median lines and
