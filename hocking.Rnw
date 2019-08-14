@@ -3,6 +3,7 @@
 \newcommand{\sectiontimings}{Comparing computation times of R regex packages}
 \newcommand{\sectiondf}{\code{df\_match\_variable} extracts new columns from character columns in a data.frame}
 \newcommand{\sectionrex}{Comparing \CRANpkg{namedCapture} variable argument syntax with \CRANpkg{rex}}
+\newcommand{\sectioncomparisons}{Comparisons with other R packages}
 
 \title{Comparing \CRANpkg{namedCapture} with other R packages for 
   regular expressions}
@@ -47,16 +48,28 @@ by name to the captured sub-strings (\code{start} group matches
 \code{9}, \code{end} group matches \code{5}). In R named capture
 groups are useful in order to create more readable regular expressions
 (names document the purpose of each sub-pattern), and to create more
-readable R code (it is easier to understand the intent of named references than
+readable \R\ code (it is easier to understand the intent of named references than
 numbered references).
 
-We begin by providing a brief history of regular
-expressions and their usage in \R. We then provide an overview of
-current R packages for regular expressions.
+In this article our original contribution is the \R\ package
+\CRANpkg{namedCapture} which provides several new features for named capture
+regular expressions. The main new ideas are (1) group-specific type
+conversion functions, (2) a user-friendly syntax for defining group
+names with \R\ argument names, and (3) named output based on subject names and the
+\code{name} capture group. 
+
+The organization of this article is as follows. The rest of this
+introduction provides a brief history of regular expressions and their
+usage in \R, then gives an overview of current \R\ packages for
+regular expressions. The second section describes the proposed
+functions of the \CRANpkg{namedCapture} package. The third section
+provides detailed comparisons with other \R\ packages, in terms of
+syntax and computation times. The article concludes with a summary and
+discussion.
 
 \subsection{Origin of regular expressions and named capture groups}
 
-Regular expressions were first proposed on paper
+Regular expressions were first proposed in a theoretical paper
 by \citet{Kleene56}. Among the first uses of a regular expression in
 computers was for searching in a text editor \citep{Thompson68} and
 lexical processing of source code \citep{Johnson68}. 
@@ -84,40 +97,68 @@ syntax \citep{pcre1-changelog.txt}. Starting in 2006, it supported the
 \verb|(?P<labelname>...)| and \verb|(?'labelname'...)| syntax, to be
 consistent with Perl and .NET \citep{pcre1-changelog.txt}.
 
-
-
-The first regular expression support in R was provided by the TRE C
-library \citep{TRE}. Although TRE supports capture groups, it does not
-allow capture groups to be named. PCRE was first included in R version
-1.6.0 in 2002 \citep{R.NEWS.1.txt}. The base R functions
+In the R NEWS files, the first mention of regular expression support
+was in 1997 with R-0.60, ``Regular expression matching is now done
+with system versions of the regexp library''
+\citep{R.NEWS.0}. Starting with R-0.99.0, ``R now compiles in the GNU
+version of regex'' \citep{R.NEWS.0}. PCRE was first included in R
+version 1.6.0 in 2002 \citep{R.NEWS.1.txt}. R-2.10 in 2009 was the
+first version to deprecate basic regular expressions,
+\code{extended=FALSE}, which are no longer supported
+\citep{R.NEWS.2}. TRE is another C library for regular expressions
+that was included in R starting in R-2.10 
+\citep{TRE}. Although TRE supports capture groups, it does
+not allow capture groups to be named. The base R functions
 \code{regexpr} and \code{gregexpr} can be given the \code{perl=TRUE}
 argument in order to use the PCRE library, or \code{perl=FALSE} to use
-the TRE C library. Recently created packages
-(\CRANpkg{stringi}, \CRANpkg{re2r}) have provided R interfaces to the
-ICU and RE2 libraries. Each library has different characteristics in
-terms of supported regex features and time complexity
-(Table~\ref{tab:regex-libraries}).
-%% Although TRE and PCRE offer similar features and
-%% performance for the vast majority of real-world subjects and patterns,
-%% some malicious patterns can make PCRE run quite a bit slower than TRE
-%% (see Section~``\sectiontimings''). 
+the TRE C library. Recently created packages (\CRANpkg{stringi},
+\CRANpkg{re2r}) have provided R interfaces to the ICU and RE2
+libraries. 
 
+Each library has different characteristics in terms of supported regex
+features and time complexity (Table~\ref{tab:regex-libraries}). The
+most important feature for the purposes of this paper is ``Output
+group names'' which means the C library supports specifying capture
+group names in the regular expression pattern, and then extracting
+those names for use in R (typically as column names in the resulting
+match matrix). ``Worst case linear time'' means that the match time is
+linear in the length of the input string, which is only guaranteed by
+the RE2 library. ``Backreferences'' can be used in patterns such as
+\verb|(.)\1|, which means to match any character that appears twice in
+a row. ``Atomic grouping'' or ``possessive quantifiers'' means that
+only the greediest option of all possible alternatives will be
+considered; an example is the pattern \verb/(?>.+)bar/ which does not
+match the subject \verb|foobar| (whereas the analog without the atomic
+group does). 
+``Unicode properties'' means support for regular expressions such as
+\verb|\p{EMOJI_Presentation}|, which only work with ICU.
+``Lookaround'' means support for zero-length assertions
+such as \verb|foo(?=bar)| which matches \verb|foo| only when it is
+followed by \verb|bar| (but \verb|bar| is not included in the match).
+``Recursion'' is useful for matching balanced parentheses, and is only
+supported in PCRE; a simple recursive pattern is \verb|a(?R)?z| which
+matches one or more \verb|a| followed by exactly the same number of
+\verb|z| (e.g. \verb|aaazzz|).
 
 The original versions of \code{regexpr} and \code{gregexpr} only
 returned the position/length of the text matched by an entire regex,
-not the capture groups (even though this is supported in TRE/PCRE). I
-wrote the C code that uses PCRE to extract the text matched by each
-named capture group \citep{HockingBug2011}, which was accepted into R
-starting with version 2.14. I presented a lightning talk at useR 2011
-that showcased the new functionality \citep{HockingUseR2011}.
+not the capture groups (even though this is supported in
+TRE/PCRE). The C code that uses PCRE to extract each named capture
+group was accepted into R starting with version 2.14
+\citep{HockingBug2011}. A lightning talk at useR 2011 showcased the
+new functionality \citep{HockingUseR2011}.
 
 \begin{table}
   \centering
   \begin{tabular}{r|cccc}
     C library & RE2 & PCRE & ICU & TRE \\
-    Named capture groups  & yes & yes & no & no\\
+    Output group names  & yes & yes & no & no\\
     Worst case linear time & yes & no & no & no \\
-    Backreferences & no & yes & yes & yes 
+    Backreferences & no & yes & yes & yes \\
+    Atomic groups / possessive quantifiers & no & yes & yes & no \\
+    Unicode properties & no & no & yes & no \\ 
+    Lookaround & no & yes & yes & no \\
+    Recursion & no & yes & no & no \\
   \end{tabular}
   \caption{\label{tab:regex-libraries}
     Features of C libraries for regular expressions usable in R.
@@ -131,7 +172,10 @@ Since the introduction of named capture support in base R version
 functionality, and other packages have been developed which use other
 C libraries (Table~\ref{tab:Clib}). Each package supports different
 options for subject/pattern input, extracted text outputs, named
-capture groups, and type conversion (Table~\ref{tab:features}). 
+capture groups, and type conversion
+(Table~\ref{tab:features}). In this section we give an overview of the
+features of each package; in the section ``\sectioncomparisons'' we show detailed
+comparisons including sample R code and outputs.
 
 The \pkg{utils} package now includes the \code{strcapture} function, which uses the
 base \code{regexec} function (also introduced in R-2.14) to extract the first
@@ -159,8 +203,11 @@ The \CRANpkg{stringi} package provides the \code{stri\_match} and
 \code{stri\_match\_all} functions, which use the ICU C library
 \citep{stringi}. The \CRANpkg{stringr} package provides the \code{str\_match} and
 \code{str\_match\_all} functions, which simply call the analogous
-functions from \CRANpkg{stringi}. Capture groups are supported but named groups
-are not, so groups must be extracted by number. The \code{stri\_match}
+functions from \CRANpkg{stringi}. 
+In ICU regular expressions, named groups are supported for use 
+in backreferences. However, the ICU library does not report group
+names to R, so groups must be extracted by number in R. 
+The \code{stri\_match}
 function returns a character matrix with one row for each subject and
 one column for each capture group. The \code{stri\_match\_all} function
 returns a list with one element for each subject; each element is a
@@ -335,12 +382,11 @@ chr.pos.pattern <- paste0(
 @
 
 The pattern above is defined using \code{paste0}, writing each named capture
-group on a separate line, which increases readability of the pattern.
-By default
-the \code{str\_match\_named} function returns a character matrix with
-one row for each subject and one column for each capture group. Column
-names are taken from the group names that were specified in the
-regular expression pattern:
+group on a separate line, which increases readability of the
+pattern. Note that an optional non-capturing group begins with
+\verb|(?:| and ends with \verb|)?|.
+In the code below, we use the \code{str\_match\_named} function on the
+previously defined subject and pattern:
 
 <<chrPosNoTypes>>=
 
@@ -349,12 +395,17 @@ regular expression pattern:
 
 @
 
-
-Note that the third argument (list of conversion functions) is omitted
-in the code above. In that case, the return value is a character
-matrix, in which missing values indicate missing subjects or no
-match. The empty string is used for optional groups which are not used
-in the match (e.g. chromEnd group/column for second subject).
+When the third argument is omitted, the return value a character
+matrix with one row for each subject and one column for each capture
+group. Column names are taken from the group names that were specified
+in the regular expression pattern. Missing values indicate missing subjects or
+no match. The empty string is used for optional groups which are not
+used in the match (e.g. chromEnd group/column for second
+subject). This output format is similar to the output of
+\code{stringi::stri\_match} and \code{stringr::str\_match}; these
+other functions also report a column for the entire match, whereas
+\code{namedCapture::str\_match\_named} only reports a column for each
+named capture group.
 
 However we often want to extract numeric data; in this case we want to
 convert chromStart/End to integers. You can do that by supplying a
@@ -758,7 +809,7 @@ which tabular data are extracted using the corresponding pattern. The
 final result is a data frame with an additional column for each named
 capture group. 
 
-\section{Comparisons with other R packages}
+\section{\sectioncomparisons}
 \label{sec:comparisons}
 
 In this section we compare the proposed functions in the \CRANpkg{namedCapture}
@@ -1063,8 +1114,15 @@ differences between the packages, and we observed linear time
 complexity for \CRANpkg{tidyr}, \CRANpkg{rematch2}, and \CRANpkg{namedCapture} (using
 either PCRE or RE2).
 
-The fourth example involves using a pathological regular expression of
-increasing size (with backreferences) on a subject of increasing size.
+The fourth example shows the worst case time complexity, 
+using a pathological regular expression of
+increasing size (with backreferences) on a subject of increasing
+size. 
+For example with size $N=2$ we use the regex \verb|(a)?(a)?\1\1| on the
+pattern \code{aa}; the match time complexity is $O(2^N)$.
+Note that possessive quantifiers, \code{(a)?+},
+could be used to avoid the exponential time complexity
+(but possessive quantifers are only supported in PCRE and ICU, not TRE nor RE2).
 Figure~\ref{fig:timings-pathological} (left) shows a comparison
 between ICU, PCRE, and TRE (RE2 is not included because it does not
 support backreferences). It is clear that all three libraries suffer
@@ -1091,11 +1149,17 @@ size. Figure~\ref{fig:timings-pathological} (right) shows a comparison
 between the previous libraries and additionally RE2. Is is clear that
 the fastest libraries are TRE and RE2, which exhibit linear time
 complexity. The slowest algorithm is clearly ICU, which exhibits
-exponential time complexity. The PCRE library is exponential up to a
+exponential time complexity. 
+The PCRE library is exponential up to a
 certain pattern/subject size, after which it is constant, because of a
-limit PCRE imposes on backtracking. Overall this comparison suggests
-that for guaranteed fast matching, RE2 must be used, via the \CRANpkg{re2r} or
-\CRANpkg{namedCapture} packages. 
+default limit PCRE imposes on backtracking. 
+If other libraries allow configuring a limit on backtracking, 
+such an option could be used to avoid this exponential time complexity.
+Again these timings are on
+synthetic data which achieve the worst case time complexity, and are
+not typical of real data. Overall this comparison suggests that for
+guaranteed fast matching, RE2 must be used, via the \CRANpkg{re2r} or
+\CRANpkg{namedCapture} packages.
 
 \section{Discussion and conclusions}
 
@@ -1123,8 +1187,16 @@ arbitrary type conversion functions, named output based on subject names and the
 can be used for backreferences (e.g. for matching HTML tags), but
 otherwise RE2 should be preferred for guaranteed linear time
 complexity.
-Overall we hope that the unique features of the \CRANpkg{namedCapture}
-package will be useful and inspiring for other package developers.  
+
+We thank a reviewer for a suggestion about other choices for the
+variable argument syntax for specifying type conversion functions. The
+current syntax uses a named R argument to specify the capture group
+name, then a character string literal to specify the capture group
+pattern, then a function name specify the type conversion. Other
+choices could use formulas or the \verb|:=| operator to define type
+conversions.  Overall we hope that the unique features of the
+\CRANpkg{namedCapture} package will be useful and inspiring for other
+package developers.
 
 \paragraph{Reproducible research statement.} The source code for this
 article can be freely downloaded from
