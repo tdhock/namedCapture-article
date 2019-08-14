@@ -94,8 +94,9 @@ Perl-Compatible Regular Expressions (PCRE) is a C library that is now
 widely used in free/open-source software tools such as Python and R.
 PCRE introduced support for named capture in 2003, based on the Python
 syntax \citep{pcre1-changelog.txt}. Starting in 2006, it supported the
-\verb|(?P<labelname>...)| and \verb|(?'labelname'...)| syntax, to be
-consistent with Perl and .NET \citep{pcre1-changelog.txt}.
+\verb|(?<labelname>...)| syntax without a P, and the
+\verb|(?'labelname'...)| syntax with single quotes, to be consistent
+with Perl and .NET \citep{pcre1-changelog.txt}.
 
 In the R NEWS files, the first mention of regular expression support
 was in 1997 with R-0.60, ``Regular expression matching is now done
@@ -119,7 +120,7 @@ Each library has different characteristics in terms of supported regex
 features and time complexity (Table~\ref{tab:regex-libraries}). The
 most important feature for the purposes of this paper is ``Output
 group names'' which means the C library supports specifying capture
-group names in the regular expression pattern, and then extracting
+group names in the regular expression pattern via \verb|(?<group>pattern)| or \verb|(?P<group>pattern)|, and then extracting
 those names for use in R (typically as column names in the resulting
 match matrix). ``Worst case linear time'' means that the match time is
 linear in the length of the input string, which is only guaranteed by
@@ -153,6 +154,8 @@ new functionality \citep{HockingUseR2011}.
   \begin{tabular}{r|cccc}
     C library & RE2 & PCRE & ICU & TRE \\
     Output group names  & yes & yes & no & no\\
+    \verb|(?<group>pattern)| & no & yes & yes & no \\
+    \verb|(?P<group>pattern)| & yes & yes & no & no \\
     Worst case linear time & yes & no & no & no \\
     Backreferences & no & yes & yes & yes \\
     Atomic groups / possessive quantifiers & no & yes & yes & no \\
@@ -190,7 +193,7 @@ extracts the first match using the base \code{regexpr} function
 \citep{rematch2}. It also provides \code{bind\_re\_match} 
 for matching data.frame columns, and \code{re\_match\_all} 
 which extracts all matches using the base \code{gregexpr} function. 
-All functions output a tibble (a data.frame subclass) with one row
+All functions output a data.frame with one row
 for each subject (for all matches a list column is used). PCRE is used
 with \code{perl=TRUE} and TRE is used with \code{perl=FALSE}. Although
 TRE supports capture groups (and can be used via the base R \code{regexec}
@@ -200,12 +203,15 @@ which do not return group info for TRE). Named capture groups are
 supported in rematch2 with \code{perl=TRUE}.
 
 The \CRANpkg{stringi} package provides the \code{stri\_match} and
-\code{stri\_match\_all} functions, which use the ICU C library
+\code{stri\_match\_all} functions, 
+which have strong unicode support due to the underlying ICU C library
 \citep{stringi}. The \CRANpkg{stringr} package provides the \code{str\_match} and
 \code{str\_match\_all} functions, which simply call the analogous
 functions from \CRANpkg{stringi}. 
 In ICU regular expressions, named groups are supported for use 
-in backreferences. However, the ICU library does not report group
+in backreferences since version 55
+\citep{ICU-release-notes-55, ICU-ticket-named-capture}. 
+However, the ICU library does not report group
 names to R, so groups must be extracted by number in R. 
 The \code{stri\_match}
 function returns a character matrix with one row for each subject and
@@ -253,10 +259,10 @@ with an additional column for each capture group.
 \begin{tabular}{llll}
 Package      & First match              & All matches             & C library  \\
 \hline
+  \CRANpkg{namedCapture} & \code{*\_match\_variable}          & \code{str\_match\_all\_variable}     & PCRE/RE2\\
  \pkg{base}         & \code{regexpr}                  & \code{gregexpr}                & PCRE/TRE \\
   \pkg{utils}        & \code{strcapture}               & NA                      & PCRE/TRE \\
   \CRANpkg{rematch2}     & \code{re\_match}, \code{bind\_re\_match}   & \code{re\_match\_all}            & PCRE/TRE\\
-  \CRANpkg{namedCapture} & \code{str\_match\_*}, \code{df\_match\_variable}          & \code{str\_match\_all\_*}     & PCRE/RE2\\
   \CRANpkg{rex}          & \code{re\_matches(global=FALSE)} & \code{re\_matches(global=TRUE)} & PCRE\\
   \CRANpkg{stringr}      & \code{str\_match}                & \code{str\_match\_all}           & ICU\\
   \CRANpkg{stringi}      & \code{stri\_match}               & \code{stri\_match\_all}          & ICU\\
@@ -273,17 +279,17 @@ Package      & First match              & All matches             & C library  \
 \begin{tabular}{llllll}
 Package/function & subject & pattern      & outputs     & named & types \\
 \hline
+\CRANpkg{namedCapture} & chr/df   & chr/verbose      & mat/list/df       & yes   & any   \\
 \pkg{base} & chr     & chr          & mat/list    & yes   & no    \\
 \code{utils::strcapture} & chr     & chr          & df          & no    & some  \\
-\CRANpkg{rematch2} & chr/df     & chr          & tibble      & yes   & no    \\
-\CRANpkg{namedCapture} & chr/df   & chr/verbose      & mat/list/df       & yes   & any   \\
-\CRANpkg{rex} & chr     & verbose      & df/list          & yes   & no    \\
+\CRANpkg{rematch2} & chr/df     & chr          & df      & yes   & no    \\
+\CRANpkg{rex} & chr     & chr/verbose      & df/list          & yes   & no    \\
 \CRANpkg{stringr} & chr     & chr          & mat/list    & no    & no    \\
 \CRANpkg{stringi} & chr     & chr          & mat/list    & no    & no    \\
 \code{tidyr::extract} & df   & chr          & df       & no    & some  \\
 \CRANpkg{re2r} & chr     & chr/compiled & df/list     & yes   & no    
 \end{tabular}
-\caption{R packages provide different options for subject/pattern input, extracted text outputs, named capture groups, and type conversion. Abbreviations: chr=character vector, df=data.frame, mat=character matrix, verbose=regex defined in R code which is translated to a character string, compiled=regex string may be compiled and saved to an R object for later use.}
+\caption{R packages provide different options for subject/pattern input, extracted text outputs, named capture groups output to R, and type conversion. Abbreviations: chr=character vector, df=data.frame, mat=character matrix, verbose=regex defined in R code which is translated to a character string, compiled=regex string may be compiled and saved to an R object for later use.}
   \label{tab:features}
 \end{table}
 
@@ -337,8 +343,8 @@ in Table~\ref{tab:functions}. We begin by introducing the \code{*\_named} functi
   the subject, as either a character vector (for \texttt{str\_*})
   functions, or a data.frame
   (for \texttt{df\_match\_variable}). The \texttt{*\_named} functions
-  require three arguments, whereas the \texttt{*\_variable} functions
-  take a variable number of arguments.}  \label{tab:functions}
+  require three arguments, and are mostly for internal use; the \texttt{*\_variable} functions
+  take a variable number of arguments and are the recommended functions to use.}  \label{tab:functions}
 \end{table}
 
 \subsection{Three argument syntax: \code{str\_match\_named} and \code{str\_match\_all\_named}}
@@ -354,8 +360,12 @@ are \code{str\_match\_named} and \code{str\_match\_all\_named}, which accept exa
   and values are functions used to convert the extracted character
   data to other (typically numeric) types.
 \end{itemize}
-
-For an example, we consider subjects containing genomic positions:
+Since introduction of the variable argument syntax (explained later in this section), 
+these functions are mostly for internal use. 
+Here we give an example of their usage, 
+because it is similar to other R regex packages 
+which some readers are probably already familiar with.
+Consider subjects containing genomic positions:
 
 <<subject>>=
 
@@ -493,7 +503,8 @@ namedCapture::str_match_all_named(
 \subsection{Readable and efficient variable argument syntax used in \code{str\_match\_variable}}
 
 In this section we introduce the variable argument syntax used in the
-\code{*\_variable} functions. This new syntax is both readable and
+\code{*\_variable} functions, which is the recommended way to to use \CRANpkg{namedCapture}. 
+This new syntax is both readable and
 efficient, because it is motivated by the desire to avoid
 repetitive/boilerplate code. In the previous sections we defined the
 pattern using the \code{paste0} boilerplate, which is used to break the
@@ -1186,7 +1197,10 @@ arbitrary type conversion functions, named output based on subject names and the
 \code{name} capture group, and two regex engines (PCRE and RE2). PCRE
 can be used for backreferences (e.g. for matching HTML tags), but
 otherwise RE2 should be preferred for guaranteed linear time
-complexity.
+complexity. 
+The ICU library may be preferred for its strong unicode support
+(Table~\ref{tab:regex-libraries}), so we are considering implementing
+ICU as another regex engine usable in \CRANpkg{namedCapture}.
 
 We thank a reviewer for a suggestion about other choices for the
 variable argument syntax for specifying type conversion functions. The
