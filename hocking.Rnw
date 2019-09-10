@@ -153,9 +153,10 @@ new functionality \citep{HockingUseR2011}.
   \centering
   \begin{tabular}{r|cccc}
     C library & RE2 & PCRE & ICU & TRE \\
+    Specify un-named group via \verb|(pattern)| & yes & yes & yes & yes \\
+    Specify group names via \verb|(?<group>pattern)| & no & yes & yes & no \\
+    Specify group names via \verb|(?P<group>pattern)| & yes & yes & no & no \\
     Output group names  & yes & yes & no & no\\
-    \verb|(?<group>pattern)| & no & yes & yes & no \\
-    \verb|(?P<group>pattern)| & yes & yes & no & no \\
     Worst case linear time & yes & no & no & no \\
     Backreferences & no & yes & yes & yes \\
     Atomic groups / possessive quantifiers & no & yes & yes & no \\
