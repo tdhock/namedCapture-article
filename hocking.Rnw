@@ -1206,7 +1206,7 @@ We thank a reviewer for a suggestion about other choices for the
 variable argument syntax for specifying type conversion functions. The
 current syntax uses a named R argument to specify the capture group
 name, then a character string literal to specify the capture group
-pattern, then a function name specify the type conversion. Other
+pattern, then a function name to specify the type conversion. Other
 choices could use formulas or the \verb|:=| operator to define type
 conversions.  Overall we hope that the unique features of the
 \CRANpkg{namedCapture} package will be useful and inspiring for other
