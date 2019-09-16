@@ -1199,9 +1199,22 @@ arbitrary type conversion functions, named output based on subject names and the
 can be used for backreferences (e.g. for matching HTML tags), but
 otherwise RE2 should be preferred for guaranteed linear time
 complexity. 
+
 The ICU library may be preferred for its strong unicode support
-(Table~\ref{tab:regex-libraries}), so we are considering implementing
-ICU as another regex engine usable in \CRANpkg{namedCapture}.
+(Table~\ref{tab:regex-libraries}), so one may wonder if it is possible
+to support ICU as an engine in \CRANpkg{namedCapture}. It is not possible,
+because \CRANpkg{namedCapture} requires the engine to support output of
+capture group names,
+which is not supported by ICU (Table~\ref{tab:regex-libraries}).
+However ICU does support un-named capture groups,
+so we have implemented support for the ICU engine
+in a new package, \CRANpkg{nc}, which provides functions
+that allow the user to specify capture group names as R arguments
+(as in the proposed variable argument syntax). Internally \CRANpkg{nc}
+generates an un-named capture group for each named R argument,
+and uses the specified argument name for the corresponding column name.
+\CRANpkg{nc} is therefore able to provide a standard interface to
+PCRE, RE2, and ICU.
 
 We thank a reviewer for a suggestion about other choices for the
 variable argument syntax for specifying type conversion functions. The
