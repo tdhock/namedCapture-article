@@ -155,9 +155,10 @@ new functionality \citep{HockingUseR2011}.
     \toprule
     C library & RE2 & PCRE & ICU & TRE \\
     \midrule
+    Specify un-named group via \verb|(pattern)| & yes & yes & yes & yes \\
+    Specify group names via \verb|(?<group>pattern)| & no & yes & yes & no \\
+    Specify group names via \verb|(?P<group>pattern)| & yes & yes & no & no \\
     Output group names  & yes & yes & no & no\\
-    \verb|(?<group>pattern)| & no & yes & yes & no \\
-    \verb|(?P<group>pattern)| & yes & yes & no & no \\
     Worst case linear time & yes & no & no & no \\
     Backreferences & no & yes & yes & yes \\
     Atomic groups / possessive quantifiers & no & yes & yes & no \\
@@ -1207,15 +1208,28 @@ arbitrary type conversion functions, named output based on subject names and the
 can be used for backreferences (e.g.\ for matching HTML tags), but
 otherwise RE2 should be preferred for guaranteed linear time
 complexity. 
+
 The ICU library may be preferred for its strong unicode support
-(Table~\ref{tab:regex-libraries}), so we are considering implementing
-ICU as another regex engine usable in \pkg{namedCapture}.
+(Table~\ref{tab:regex-libraries}), so one may wonder if it is possible
+to support ICU as an engine in \pkg{namedCapture}. It is not possible,
+because \pkg{namedCapture} requires the engine to support output of
+capture group names,
+which is not supported by ICU (Table~\ref{tab:regex-libraries}).
+However ICU does support un-named capture groups,
+so we have implemented support for the ICU engine
+in a new package, \CRANpkg{nc}, which provides functions
+that allow the user to specify output column names as R arguments
+(as in the proposed variable argument syntax). Internally \pkg{nc}
+generates an un-named capture group for each named R argument,
+and uses the specified argument name for the corresponding output column name.
+Therefore \pkg{nc} is able to provide a standard interface to three C regex libraries:
+PCRE, RE2, and ICU.
 
 We thank a reviewer for a suggestion about other choices for the
 variable argument syntax for specifying type conversion functions. The
 current syntax uses a named R argument to specify the capture group
 name, then a character string literal to specify the capture group
-pattern, then a function name specify the type conversion. Other
+pattern, then a function name to specify the type conversion. Other
 choices could use formulas or the \verb|:=| operator to define type
 conversions.  Overall we hope that the unique features of the
 \pkg{namedCapture} package will be useful and inspiring for other
