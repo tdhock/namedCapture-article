@@ -11,7 +11,7 @@ Abstract: Regular expressions are powerful tools for manipulating
   package, and provide detailed comparisons with related R packages
   (rex, stringr, stringi, tidyr, rematch2, re2r).
 
-Article [[file:RJwrapper.pdf]] submitted for review at R Journal. Main
+Article ([[file:RJwrapper.pdf][local copy]]) accepted at [[https://journal.r-project.org/archive/2019/RJ-2019-050/index.html][R Journal]]. Main
 source file to edit is [[file:hocking.Rnw]] and [[file:Makefile]] takes care of
 creating [[file:submission.zip]]
 
