@@ -227,12 +227,13 @@ capture group.
 The \pkg{re2r} package provides the \code{re2\_match} and
 \code{re2\_match\_all} functions, which use the RE2 C++ library
 \citep{re2r}. The outputs of these functions are consistent with the
-\pkg{stringi}/\pkg{stringr} packages. The input regex pattern may be specified as
-a character string or as a pre-compiled regex object (which
-results in faster matching if the regex is used with several calls to
-matching functions). Like TRE, the RE2 library guarantees linear
-time complexity, which is useful to avoid denial-of-service attacks
-from malicious patterns (see Section~``\sectiontimings'').
+\pkg{stringi}/\pkg{stringr} packages. The input regex pattern may be
+specified as a character string or as a pre-compiled regex object
+(which results in faster matching if the regex is used with several
+calls to matching functions). Unlike the other regex libraries, the RE2
+library guarantees linear time complexity, which is useful to avoid
+denial-of-service attacks from malicious patterns (see
+Section~``\sectiontimings'').
 
 The \CRANpkg{rex} package provides the \code{re\_matches} function which supports
 named capture groups, and always uses PCRE \citep{rex}. By default it
@@ -1072,7 +1073,7 @@ differences:
   In contrast \code{tidyr::extract(convert = TRUE)} always uses
   \code{utils::type.convert} for type conversion, and
   \code{namedCapture::df\_match\_variable} supports arbitrary
-  group-specific type conversion functions, which are specified on the
+  group-specific type conversion functions, which may be specified on the
   same line as the corresponding name/pattern.
 \item Because \code{tidyr::extract} and
   \code{rematch2::bind\_re\_match} operate on one column in the
@@ -1229,7 +1230,7 @@ We thank a reviewer for a suggestion about other choices for the
 variable argument syntax for specifying type conversion functions. The
 current syntax uses a named R argument to specify the capture group
 name, then a character string literal to specify the capture group
-pattern, then a function name to specify the type conversion. Other
+pattern, then a function to specify the type conversion. Other
 choices could use formulas or the \verb|:=| operator to define type
 conversions.  Overall we hope that the unique features of the
 \pkg{namedCapture} package will be useful and inspiring for other

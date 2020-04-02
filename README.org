@@ -11,9 +11,17 @@ Abstract: Regular expressions are powerful tools for manipulating
   package, and provide detailed comparisons with related R packages
   (rex, stringr, stringi, tidyr, rematch2, re2r).
 
-Article ([[file:RJwrapper.pdf][local copy]]) accepted at [[https://journal.r-project.org/archive/2019/RJ-2019-050/index.html][R Journal]]. Main
-source file to edit is [[file:hocking.Rnw]] and [[file:Makefile]] takes care of
-creating [[file:submission.zip]]
+Article accepted at [[https://journal.r-project.org/archive/2019/RJ-2019-050/index.html][R Journal]]. Errata which have been corrected in
+[[file:RJwrapper.pdf][this local copy]]:
+- The publised version states "Like TRE, the RE2 library guarantees
+  linear time complexity" which is misleading. Actually TRE does NOT
+  guarantee linear time complexity if the pattern has
+  backreferences. In fact, this is true of any regex engine; because
+  RE2 does not support backreferences, it can guarantee time
+  complexity which is linear in the subject and pattern size.
+
+Main source file to edit is [[file:hocking.Rnw]] and [[file:Makefile]] takes
+care of creating [[file:submission.zip]]
 
 ** 6 Mar 2019
 

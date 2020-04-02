@@ -52,38 +52,6 @@ stats.dt[, label := ifelse(grepl("utils", expr), paste(expr), ifelse(
   sub("::.*", "", expr)))]
 stats.dt[, label.param := ifelse(
   param=="", label, paste0(label, "\n", param))]
-dl.linetype <- ggplot()+
-  theme_bw()+
-  theme(panel.spacing=grid::unit(0, "lines"))+
-  facet_grid(. ~ Subject, labeller=label_both)+
-  scale_y_log10("Time to compute first match
-in each subject (seconds)")+
-  coord_cartesian(
-    xlim=c(10^1.8, 10^6.5),
-    ylim=c(1e-3, 1e1),
-    expand=FALSE)+
-  scale_x_log10(
-    "Number of subjects",
-    breaks=10^(2:5))+
-  geom_ribbon(aes(
-    subject.size, ymin=q25, ymax=q75, group=label.param),
-    data=stats.dt,
-    alpha=0.5)+
-  geom_line(aes(
-    subject.size, median, linetype=pkg, group=label.param),
-    data=stats.dt)+
-  directlabels::geom_dl(aes(
-    subject.size, median, 
-    label=paste0(label.param, " ")),
-    method=list(cex=0.65, box.color="grey", "last.polygons"),
-    data=stats.dt)+
-  guides(color="none",fill="none", linetype="none")
-pdf("figure-timings-first-linetype.pdf", 6, 2.5)
-print(dl.linetype)
-dev.off()
-png("figure-timings-first-linetype.png", 6, 2.5, units="in", res=200)
-print(dl.linetype)
-dev.off()
 
 dl <- ggplot()+
   theme_bw()+
@@ -115,4 +83,37 @@ in each subject (seconds)")+
   guides(color="none",fill="none")
 pdf("figure-timings-first.pdf", 6, 2.5)
 print(dl)
+dev.off()
+
+dl.linetype <- ggplot()+
+  theme_bw()+
+  theme(panel.spacing=grid::unit(0, "lines"))+
+  facet_grid(. ~ Subject, labeller=label_both)+
+  scale_y_log10("Time to compute first match
+in each subject (seconds)")+
+  coord_cartesian(
+    xlim=c(10^1.8, 10^6.5),
+    ylim=c(1e-3, 1e1),
+    expand=FALSE)+
+  scale_x_log10(
+    "Number of subjects",
+    breaks=10^(2:5))+
+  geom_ribbon(aes(
+    subject.size, ymin=q25, ymax=q75, group=label.param),
+    data=stats.dt,
+    alpha=0.5)+
+  geom_line(aes(
+    subject.size, median, linetype=pkg, group=label.param),
+    data=stats.dt)+
+  directlabels::geom_dl(aes(
+    subject.size, median, 
+    label=paste0(label.param, " ")),
+    method=list(cex=0.65, box.color="grey", "last.polygons"),
+    data=stats.dt)+
+  guides(color="none",fill="none", linetype="none")
+pdf("figure-timings-first-linetype.pdf", 6, 2.5)
+print(dl.linetype)
+dev.off()
+png("figure-timings-first-linetype.png", 6, 2.5, units="in", res=200)
+print(dl.linetype)
 dev.off()
